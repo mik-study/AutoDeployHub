@@ -5,7 +5,7 @@
 >
 > - 팀: 2인 (현수, 민준)
 > - 저장소: `C:\khs\AutoDeployHub`
-> - 최종 갱신: 2026-06-03
+> - 최종 갱신: 2026-06-08
 
 ---
 
@@ -15,7 +15,7 @@
 |---|---|---|---|
 | 1주차 | ~2026-05-26 | 도메인 분석 + 아키텍처 다이어그램 | ✅ 완료 |
 | 2주차 | 2026-05-27 ~ 2026-06-02 | MVP 설계 통일 + 설계 산출물 + 프로젝트 init | ✅ 완료 |
-| 3주차 | 2026-06-03 ~ | **코드 시작** — 인프라 기동 + 엔티티/인증 + 프론트 skeleton | 🚧 진행 예정 |
+| 3주차 | 2026-06-03 ~ | **코드 시작** — 인프라 기동 + 엔티티/인증 + 프론트 skeleton | 🚧 진행 중 (현수 ✅ / 민준 예정) |
 
 ### 산출물 인덱스
 
@@ -120,31 +120,38 @@
 > 끝나면 `docker compose up` → 백엔드 기동 → 프론트에서 로그인/프로젝트 목록 호출까지 한 줄로 이어져야 함.
 
 ### 스프린트 목표 (Definition of Done)
-- [ ] `docker compose up` 으로 postgres + redis + rabbitmq + traefik 한 번에 기동
-- [ ] 백엔드: ERD 7개 엔티티 + enum이 JPA로 매핑되고 스키마 자동 생성/마이그레이션
-- [ ] 백엔드: 회원가입/로그인(JWT) + 프로젝트 CRUD API 동작 (Swagger에서 확인)
-- [ ] 프론트: 라우터 + 레이아웃 + 로그인 화면 + 프로젝트 목록 화면이 실제 API와 연동
+- [ ] `docker compose up` 으로 postgres + redis + rabbitmq + traefik 한 번에 기동 *(민준)*
+- [x] 백엔드: ERD 7개 엔티티 + enum이 JPA로 매핑되고 스키마 자동 생성/마이그레이션 ✅ *(현수)*
+- [x] 백엔드: 회원가입/로그인(JWT) + 프로젝트 CRUD API 동작 ✅ *(현수, Swagger 노출)*
+- [ ] 프론트: 라우터 + 레이아웃 + 로그인 화면 + 프로젝트 목록 화면이 실제 API와 연동 *(민준)*
 - [ ] README에 로컬 실행 방법(backend/frontend/infra) 정리
 
-### 👤 현수 담당 — 백엔드 도메인 & 인증
+### 👤 현수 담당 — 백엔드 도메인 & 인증 (✅ 2026-06-08 완료)
 
-1. **모듈 구조 결정 & 정리** (먼저)
-   - 멀티모듈(`-common/-api/-worker`) 전환 vs 단일 모듈 유지를 회의에서 확정
-   - 결정 결과를 `02_decisions.md` 변경 이력에 추가
-2. **JPA 엔티티 + enum 구현** (`03_erd.md` 그대로)
-   - `User`, `Project`, `EnvironmentVariable`, `Deployment`, `DeploymentLog`, `RuntimeInstance`, `Webhook`
-   - `DeploymentStatus`(15) / `RuntimeColor`(BLUE·GREEN) / `DeploymentTriggerType` enum (`04_state_machine.md` §6)
-   - 스키마 관리: Flyway 또는 `ddl-auto=validate` 전략 결정 후 적용
-   - 인덱스/유니크 제약을 `03_erd.md` §3 SQL 기준으로 반영
-3. **인증 (JWT)**
-   - `POST /api/auth/signup`, `/login`, `/refresh`, `/logout`
-   - Spring Security + JWT 필터, 비밀번호 BCrypt
-4. **Project CRUD API**
+1. ✅ **모듈 구조 결정 & 정리**
+   - **단일 모듈 유지로 확정**(`com.proj.autodeploy`). 2인 규모 MVP에서 멀티모듈은 과함.
+   - feature 패키지(`auth/user/project/environment/deployment/runtime/webhook/global`)로 경계 구분.
+   - 멀티모듈(`-common/-api/-worker`) 전환은 Worker 분리가 실제 필요해지는 시점(4~5주차)에 재검토.
+2. ✅ **JPA 엔티티 + enum 구현** (`03_erd.md` 그대로)
+   - 7개 엔티티: `User`, `Project`, `EnvironmentVariable`, `Deployment`, `DeploymentLog`, `RuntimeInstance`, `Webhook`
+   - enum: `DeploymentStatus`(15) / `RuntimeColor`(BLUE·GREEN, opposite/defaultPort) / `DeploymentTriggerType` / `RuntimeStatus` / `LogLevel` / `ProjectStatus` / `BuildType` / `UserStatus`
+   - 스키마 관리: **`ddl-auto=update`(로컬 dev)** 채택. Flyway 도입은 스키마가 안정되는 시점으로 보류.
+   - 인덱스/유니크 제약을 `03_erd.md` §3 기준으로 `@Index`/`@Column(unique)` 반영.
+3. ✅ **인증 (JWT)**
+   - `POST /api/auth/signup`(201), `/login`(200), `/refresh`(200), `/logout`(204)
+   - Spring Security(stateless) + `JwtAuthenticationFilter` + BCrypt, access/refresh 토큰 분리(jjwt 0.12).
+4. ✅ **Project CRUD API**
    - `POST/GET/GET{id}/PATCH/DELETE /api/projects`
-   - `05_api_spec.md`의 request/response 포맷·에러 포맷·페이지네이션 규칙 준수
-   - `subdomain` 자동 생성 로직 (`project-{id}`)
-5. **DeploymentStatus 상태머신 단위 테스트** (`04_state_machine.md` §7)
-   - 정상 전이 / FAILED 진입 / terminal 상태 전이 거부 / `isTerminal()`·`isInProgress()`
+   - `05_api_spec.md`의 응답 포맷(`{data}` / `{data,page}`)·에러 포맷(`{error:{code,message,details}}`)·페이지네이션 준수.
+   - 소유권 검증(PROJECT_ACCESS_DENIED), `subdomain` 자동 생성(`project-{id}`), webhookSecret 생성 시 1회 노출/조회 시 마스킹.
+5. ✅ **DeploymentStatus 상태머신 단위 테스트** (`04_state_machine.md` §7)
+   - 정상 전이 / 각 단계 FAILED 진입 / SUCCEEDED·CANCELED 종착 / FAILED→ROLLING_BACK 만 허용 / `isTerminal()`·`isInProgress()` 검증.
+   - `Deployment.transitionTo()`에서 전이 규칙 강제(불가 전이 시 `IllegalStateException`).
+
+> **빌드 결과**: `./gradlew clean build` → **BUILD SUCCESSFUL** (contextLoads + 상태머신 테스트 통과).
+> 테스트는 외부 DB 없이 **H2(PostgreSQL 호환 모드)** 로 컨텍스트 로드, 운영/로컬은 compose postgres 사용.
+>
+> ⏭️ **현수 잔여(민준 인프라 의존)**: RabbitMQ/Redis 연동, 실제 postgres 기동 후 통합 테스트는 민준의 `08_docker-compose.yml` 완료 후 이어서 진행.
 
 ### 👤 민준 담당 — 인프라 & 프론트엔드 skeleton
 
@@ -179,3 +186,5 @@
 | 일자 | 내용 |
 |---|---|
 | 2026-06-03 | 진행 내역 문서 최초 작성. 1·2주차 완료 기록, 3주차 과제 정의 |
+| 2026-06-03 | 백엔드 스캐폴드 Kotlin → **Java 21** 전환 |
+| 2026-06-08 | **3주차 현수 과제 완료** — 7개 엔티티/enum, JWT 인증, Project CRUD, 상태머신 테스트, 빌드 그린화 |
