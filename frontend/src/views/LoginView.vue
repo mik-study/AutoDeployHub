@@ -24,12 +24,15 @@ const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 
-const email = ref('')
+const email = ref(typeof route.query.email === 'string' ? route.query.email : '')
 const password = ref('')
 const keepLoggedIn = ref(false)
 const showPassword = ref(false)
 const isSubmitting = ref(false)
 const errorMessage = ref('')
+const successMessage = computed(() => {
+  return route.query.registered === '1' ? '회원가입이 완료되었습니다. 로그인해주세요.' : ''
+})
 
 const redirectPath = computed(() => {
   const redirect = route.query.redirect
@@ -122,6 +125,8 @@ async function handleLogin() {
           <p>계정 정보를 입력하고 로그인하세요.</p>
         </div>
 
+        <p v-if="successMessage" class="form-success">{{ successMessage }}</p>
+
         <label class="field">
           <span class="field-label">이메일</span>
           <span class="input-shell">
@@ -177,7 +182,7 @@ async function handleLogin() {
           GitHub 계정으로 로그인
         </button>
 
-        <p class="signup">계정이 없으신가요? <a href="/">회원가입</a></p>
+        <p class="signup">계정이 없으신가요? <RouterLink to="/signup">회원가입</RouterLink></p>
       </form>
     </section>
   </main>

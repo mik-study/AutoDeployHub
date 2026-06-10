@@ -1,9 +1,17 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import { useAuthStore } from './stores/auth'
 
 const route = useRoute()
+const router = useRouter()
+const authStore = useAuthStore()
 const isAuthLayout = computed(() => route.meta.layout === 'auth')
+
+async function handleLogout() {
+  await authStore.logout()
+  await router.push('/login')
+}
 </script>
 
 <template>
@@ -29,6 +37,7 @@ const isAuthLayout = computed(() => route.meta.layout === 'auth')
           <strong>admin</strong>
           <span>Administrator</span>
         </div>
+        <button class="sidebar-logout" type="button" @click="handleLogout">로그아웃</button>
       </div>
     </aside>
 

@@ -2,6 +2,7 @@ import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import { getAccessToken } from '../utils/authToken'
 import LoginView from '../views/LoginView.vue'
 import ProjectsView from '../views/ProjectsView.vue'
+import SignupView from '../views/SignupView.vue'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -12,6 +13,14 @@ const routes: RouteRecordRaw[] = [
     path: '/login',
     name: 'login',
     component: LoginView,
+    meta: {
+      layout: 'auth',
+    },
+  },
+  {
+    path: '/signup',
+    name: 'signup',
+    component: SignupView,
     meta: {
       layout: 'auth',
     },
@@ -47,7 +56,7 @@ router.beforeEach((to) => {
     }
   }
 
-  if (to.name === 'login' && isLoggedIn) {
+  if ((to.name === 'login' || to.name === 'signup') && isLoggedIn) {
     return {
       name: 'projects',
     }

@@ -1,6 +1,12 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
-import { login as requestLogin, type LoginRequest } from '../api/auth'
+import {
+  login as requestLogin,
+  logout as requestLogout,
+  signup as requestSignup,
+  type LoginRequest,
+  type SignupRequest,
+} from '../api/auth'
 import { getAccessToken, removeAuthTokens, setAuthTokens } from '../utils/authToken'
 
 export const useAuthStore = defineStore('auth', () => {
@@ -14,7 +20,20 @@ export const useAuthStore = defineStore('auth', () => {
     accessToken.value = tokens.accessToken
   }
 
-  function logout() {
+  async function signup(payload: SignupRequest) {
+    return requestSignup(payload)
+  }
+
+  async function logout() {
+    try {
+      await requestLogout()
+    } finally {
+      removeAuthTokens()
+      accessToken.value = null
+    }
+  }
+
+  function clearSession() {
     removeAuthTokens()
     accessToken.value = null
   }
@@ -23,6 +42,8 @@ export const useAuthStore = defineStore('auth', () => {
     accessToken,
     isAuthenticated,
     login,
+    signup,
     logout,
+    clearSession,
   }
 })
