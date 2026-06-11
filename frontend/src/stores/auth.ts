@@ -45,12 +45,12 @@ function removeStoredUser() {
 }
 
 function createUserFromLoginResponse(response: LoginResponse, fallbackEmail: string): AuthUser {
-  const email = response.user.email || fallbackEmail
+  const email = response.user?.email || fallbackEmail
 
   return {
     email,
-    name: response.user.name || email.split('@')[0] || 'user',
-    role: response.user.role || 'User',
+    name: response.user?.name || email.split('@')[0] || 'user',
+    role: response.user?.role || 'User',
   }
 }
 
