@@ -43,6 +43,10 @@ input {
   font: inherit;
 }
 
+button {
+  border: 0;
+}
+
 button,
 a,
 input {
@@ -60,7 +64,7 @@ input {
 .app-layout {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: 300px minmax(0, 1fr);
+  grid-template-columns: 250px minmax(0, 1fr);
 }
 
 .sidebar {
@@ -84,7 +88,21 @@ input {
 
 .sidebar-brand {
   height: 44px;
-  font-size: 24px;
+  font-size: 20px;
+}
+
+.sidebar-brand .brand-mark {
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 0;
+  overflow: visible;
+}
+
+.sidebar-brand .brand-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .sidebar-brand > span span,
@@ -109,20 +127,24 @@ input {
 .sidebar-nav {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 20px;
   margin-top: 58px;
 }
 
-.sidebar-nav a {
+.sidebar-nav a,
+.sidebar-nav button {
   min-height: 64px;
   padding: 0 18px;
   display: flex;
   align-items: center;
   gap: 14px;
   border-radius: 8px;
+  background: transparent;
   color: rgba(255, 255, 255, 0.88);
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
+  text-align: left;
+  cursor: pointer;
 }
 
 .sidebar-nav a.router-link-active {
@@ -130,16 +152,24 @@ input {
   box-shadow: 0 18px 38px rgba(7, 92, 255, 0.28);
 }
 
+.sidebar-nav button {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.sidebar-nav a:hover,
+.sidebar-nav button:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.sidebar-nav a.router-link-active:hover {
+  background: linear-gradient(135deg, #0b63ff, #0040b8);
+}
+
 .nav-icon {
   width: 28px;
   height: 28px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  border-radius: 7px;
-  font-size: 13px;
-  font-weight: 800;
+  flex: 0 0 auto;
+  color: currentColor;
 }
 
 .sidebar-user {
@@ -149,7 +179,6 @@ input {
   display: flex;
   align-items: center;
   gap: 14px;
-  flex-wrap: wrap;
 }
 
 .avatar {
@@ -164,30 +193,44 @@ input {
   font-weight: 900;
 }
 
+.avatar svg {
+  width: 48px;
+  height: 48px;
+}
+
 .sidebar-user strong,
 .sidebar-user span {
   display: block;
 }
 
 .sidebar-user strong {
-  font-size: 18px;
+  font-size: 16px;
 }
 
 .sidebar-user span {
   margin-top: 4px;
+  font-size: 14px;
   color: rgba(255, 255, 255, 0.76);
 }
 
 .sidebar-logout {
-  width: 100%;
-  min-height: 38px;
-  margin-top: 8px;
+  width: 34px;
+  height: 34px;
+  margin-left: auto;
+  padding: 0;
   border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 7px;
+  border-radius: 999px;
   background: rgba(255, 255, 255, 0.08);
   color: rgba(255, 255, 255, 0.9);
-  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
+}
+
+.sidebar-logout svg {
+  width: 20px;
+  height: 20px;
 }
 
 .sidebar-logout:hover {
@@ -196,7 +239,7 @@ input {
 
 .content {
   min-width: 0;
-  padding: 38px 44px;
+  padding: 34px 44px 26px;
 }
 
 .screen {
@@ -206,7 +249,7 @@ input {
 }
 
 .screen-header {
-  margin-bottom: 28px;
+  margin-bottom: 24px;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -220,7 +263,11 @@ input {
 }
 
 .toolbar {
-  margin-bottom: 28px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
 }
 
 .search-field,
@@ -258,11 +305,11 @@ input {
 }
 
 .search-field input {
-  height: 62px;
-  padding-left: 64px;
+  height: 56px;
+  padding-left: 58px;
   border-radius: 10px;
   color: #1b2a52;
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 700;
   box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
 }
@@ -274,26 +321,17 @@ input {
 
 .search-icon {
   position: absolute;
-  left: 22px;
+  left: 20px;
   top: 50%;
-  width: 24px;
-  height: 24px;
+  width: 25px;
+  height: 25px;
   transform: translateY(-50%);
-  border: 3px solid #50618d;
-  border-radius: 999px;
+  color: #50618d;
   pointer-events: none;
 }
 
 .search-icon::after {
-  content: '';
-  position: absolute;
-  right: -8px;
-  bottom: -6px;
-  width: 10px;
-  height: 3px;
-  border-radius: 999px;
-  background: #50618d;
-  transform: rotate(45deg);
+  display: none;
 }
 
 .search-field input:focus,
@@ -311,6 +349,7 @@ input {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   font-weight: 800;
   cursor: pointer;
 }
@@ -323,6 +362,17 @@ input {
 
 .primary-button:hover {
   background: var(--primary-dark);
+}
+
+.button-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.create-project-button {
+  min-width: 126px;
+  height: 54px;
+  font-size: 16px;
 }
 
 .primary-button:disabled,
@@ -366,6 +416,7 @@ input {
   color: #0f1b3d;
   background: #fbfcff;
   font-weight: 800;
+  font-size: 16px;
 }
 
 .data-table td strong,
@@ -379,7 +430,56 @@ input {
 }
 
 .project-table td {
-  height: 112px;
+  height: 96px;
+}
+
+.project-table th,
+.project-table td {
+  padding-top: 18px;
+  padding-bottom: 18px;
+}
+
+.project-table th:first-child,
+.project-table td:first-child {
+  width: 32%;
+}
+
+.project-table th:nth-child(2),
+.project-table td:nth-child(2) {
+  width: 16%;
+}
+
+.project-table th:nth-child(3),
+.project-table td:nth-child(3),
+.project-table th:nth-child(4),
+.project-table td:nth-child(4) {
+  width: 22%;
+}
+
+.action-column,
+.row-action-cell {
+  width: 52px;
+  text-align: right;
+}
+
+.row-action-button {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #07122d;
+  cursor: pointer;
+}
+
+.row-action-button svg {
+  width: 24px;
+  height: 24px;
+}
+
+.row-action-button:hover {
+  background: #eef4ff;
+  color: var(--primary);
 }
 
 .table-message {
@@ -433,8 +533,20 @@ input {
   border: 1px solid #fed7aa;
 }
 
+.version-color {
+  font-weight: 800;
+}
+
+.version-color.green {
+  color: #008a2e;
+}
+
+.version-color.blue {
+  color: var(--primary);
+}
+
 .pagination {
-  margin-top: 28px;
+  margin-top: 22px;
   display: flex;
   justify-content: center;
   gap: 12px;
@@ -447,7 +559,16 @@ input {
   border-radius: 8px;
   background: #ffffff;
   color: var(--text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   font-weight: 800;
+  cursor: pointer;
+}
+
+.pagination button svg {
+  width: 20px;
+  height: 20px;
 }
 
 .pagination button.active {
@@ -725,6 +846,10 @@ input {
   font-weight: 800;
 }
 
+.submit-button {
+  margin-top: 20px;
+}
+
 .form-success {
   margin: -10px 0 20px;
   padding: 12px 14px;
@@ -790,7 +915,7 @@ input {
 
 @media (max-width: 1180px) {
   .app-layout {
-    grid-template-columns: 240px minmax(0, 1fr);
+    grid-template-columns: 250px minmax(0, 1fr);
   }
 
   .content {
@@ -846,6 +971,7 @@ input {
   }
 
   .screen-header,
+  .toolbar,
   .form-row {
     flex-direction: column;
     align-items: stretch;
@@ -887,9 +1013,5 @@ input {
 
   .login-card {
     padding: 34px 22px;
-  }
-
-  .submit-button {
-    margin-top: 20px;
   }
 }

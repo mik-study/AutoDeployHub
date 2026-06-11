@@ -2,12 +2,17 @@ import { apiClient } from './client'
 
 export type ProjectStatus = 'ACTIVE' | 'INACTIVE' | 'FAILED' | 'PENDING' | 'RUNNING'
 export type DeploymentStatus = 'SUCCEEDED' | 'FAILED' | 'RUNNING' | 'PENDING'
+export type RuntimeColor = 'BLUE' | 'GREEN'
 
 export interface ProjectItem {
   projectId: number
   name: string
   subdomain: string
   status: ProjectStatus
+  activeVersion?: {
+    version: string
+    color: RuntimeColor
+  } | null
   lastDeployment: {
     deploymentId: number
     status: DeploymentStatus

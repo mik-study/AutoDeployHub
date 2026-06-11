@@ -1,14 +1,106 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  MagnifyingGlassIcon,
+  PlusIcon,
+} from '@heroicons/vue/24/outline'
 import { getProjects, type ProjectItem } from '../api/projects'
 
-const statusLabel = {
-  ACTIVE: 'RUNNING',
-  INACTIVE: 'PENDING',
-  FAILED: 'FAILED',
-  PENDING: 'PENDING',
-  RUNNING: 'RUNNING',
-}
+type ProjectDisplayStatus = 'RUNNING' | 'PENDING' | 'FAILED'
+
+const PROJECTS_PAGE_SIZE = 5
+
+const mockProjects: ProjectItem[] = [
+  {
+    projectId: 1,
+    name: '배포 플랫폼',
+    subdomain: 'deploy-platform',
+    status: 'RUNNING',
+    activeVersion: {
+      version: 'v1.2.3',
+      color: 'GREEN',
+    },
+    lastDeployment: {
+      deploymentId: 101,
+      status: 'SUCCEEDED',
+      finishedAt: createMinutesAgo(10),
+    },
+  },
+  {
+    projectId: 2,
+    name: '사용자 서비스',
+    subdomain: 'user-service',
+    status: 'PENDING',
+    activeVersion: {
+      version: 'v2.1.0',
+      color: 'BLUE',
+    },
+    lastDeployment: {
+      deploymentId: 102,
+      status: 'PENDING',
+      finishedAt: createMinutesAgo(60),
+    },
+  },
+  {
+    projectId: 3,
+    name: '주문 서비스',
+    subdomain: 'order-service',
+    status: 'FAILED',
+    activeVersion: {
+      version: 'v1.0.5',
+      color: 'BLUE',
+    },
+    lastDeployment: {
+      deploymentId: 103,
+      status: 'FAILED',
+      finishedAt: createMinutesAgo(19 * 60),
+    },
+  },
+  {
+    projectId: 4,
+    name: '결제 서비스',
+    subdomain: 'payment-service',
+    status: 'PENDING',
+    activeVersion: null,
+    lastDeployment: {
+      deploymentId: 104,
+      status: 'PENDING',
+      finishedAt: createMinutesAgo(24 * 60),
+    },
+  },
+  {
+    projectId: 5,
+    name: '알림 서비스',
+    subdomain: 'notification-service',
+    status: 'RUNNING',
+    activeVersion: {
+      version: 'v1.3.0',
+      color: 'GREEN',
+    },
+    lastDeployment: {
+      deploymentId: 105,
+      status: 'SUCCEEDED',
+      finishedAt: createMinutesAgo(2 * 60),
+    },
+  },
+  {
+    projectId: 6,
+    name: 'API 게이트웨이',
+    subdomain: 'gateway-service',
+    status: 'RUNNING',
+    activeVersion: {
+      version: 'v1.4.2',
+      color: 'BLUE',
+    },
+    lastDeployment: {
+      deploymentId: 106,
+      status: 'SUCCEEDED',
+      finishedAt: createMinutesAgo(35),
+    },
+  },
+]
 
 const projects = ref<ProjectItem[]>([])
 const searchKeyword = ref('')
@@ -32,35 +124,118 @@ const filteredProjects = computed(() => {
   })
 })
 
+const visiblePages = computed(() => {
+  const maxVisiblePages = 5
+  const halfRange = Math.floor(maxVisiblePages / 2)
+  const lastPage = totalPages.value - 1
+  const startPage = Math.max(0, Math.min(currentPage.value - halfRange, lastPage - maxVisiblePages + 1))
+  const endPage = Math.min(lastPage, startPage + maxVisiblePages - 1)
+
+  return Array.from({ length: endPage - startPage + 1 }, (_, index) => startPage + index)
+})
+
+function createMinutesAgo(minutes: number) {
+  return new Date(Date.now() - minutes * 60 * 1000).toISOString()
+}
+
+function getMockProjectPage(page: number) {
+  const startIndex = page * PROJECTS_PAGE_SIZE
+  const data = mockProjects.slice(startIndex, startIndex + PROJECTS_PAGE_SIZE)
+
+  return {
+    data,
+    page: {
+      page,
+      size: PROJECTS_PAGE_SIZE,
+      totalElements: mockProjects.length,
+      totalPages: Math.max(Math.ceil(mockProjects.length / PROJECTS_PAGE_SIZE), 1),
+    },
+  }
+}
+
 async function loadProjects(page = 0) {
   isLoading.value = true
   errorMessage.value = ''
 
   try {
-    const response = await getProjects(page, 20)
+    const response = await getProjects(page, PROJECTS_PAGE_SIZE)
 
     projects.value = response.data
     currentPage.value = response.page.page
     totalPages.value = Math.max(response.page.totalPages, 1)
   } catch {
+    if (import.meta.env.DEV) {
+      const response = getMockProjectPage(page)
+
+      projects.value = response.data
+      currentPage.value = response.page.page
+      totalPages.value = response.page.totalPages
+      return
+    }
+
     errorMessage.value = '프로젝트 목록을 불러오지 못했습니다.'
   } finally {
     isLoading.value = false
   }
 }
 
-function formatLastDeploy(project: ProjectItem) {
+function formatLastDeployDate(project: ProjectItem) {
   if (!project.lastDeployment) {
     return '-'
   }
 
   return new Intl.DateTimeFormat('ko-KR', {
-    dateStyle: 'short',
-    timeStyle: 'short',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
   }).format(new Date(project.lastDeployment.finishedAt))
 }
 
-function getActiveVersion(project: ProjectItem) {
+function formatRelativeDeploy(project: ProjectItem) {
+  if (!project.lastDeployment) {
+    return ''
+  }
+
+  const deployedAt = new Date(project.lastDeployment.finishedAt).getTime()
+  const diffMinutes = Math.max(1, Math.floor((Date.now() - deployedAt) / 60000))
+
+  if (diffMinutes < 60) {
+    return `(${diffMinutes}분 전)`
+  }
+
+  const diffHours = Math.floor(diffMinutes / 60)
+
+  if (diffHours < 24) {
+    return `(${diffHours}시간 전)`
+  }
+
+  return `(${Math.floor(diffHours / 24)}일 전)`
+}
+
+function getProjectDisplayStatus(project: ProjectItem): ProjectDisplayStatus {
+  if (project.status === 'FAILED' || project.lastDeployment?.status === 'FAILED') {
+    return 'FAILED'
+  }
+
+  if (project.status === 'RUNNING' || project.status === 'ACTIVE' || project.lastDeployment?.status === 'RUNNING') {
+    return 'RUNNING'
+  }
+
+  return 'PENDING'
+}
+
+function getStatusClass(project: ProjectItem) {
+  return getProjectDisplayStatus(project).toLowerCase()
+}
+
+function getActiveVersionLabel(project: ProjectItem) {
+  if (project.activeVersion) {
+    return project.activeVersion.version
+  }
+
   return project.lastDeployment ? `#${project.lastDeployment.deploymentId}` : '-'
 }
 
@@ -75,14 +250,17 @@ onMounted(() => {
       <div>
         <h1>프로젝트</h1>
       </div>
-      <button class="primary-button" type="button">+ 새 프로젝트</button>
     </div>
 
     <div class="toolbar">
       <label class="search-field">
-        <span class="search-icon" aria-hidden="true"></span>
+        <MagnifyingGlassIcon class="search-icon" aria-hidden="true" />
         <input v-model="searchKeyword" placeholder="프로젝트 검색..." />
       </label>
+      <button class="primary-button create-project-button" type="button">
+        <PlusIcon class="button-icon" aria-hidden="true" />
+        새 프로젝트
+      </button>
     </div>
 
     <section class="panel">
@@ -93,17 +271,18 @@ onMounted(() => {
             <th>상태</th>
             <th>활성 버전</th>
             <th>최근 배포</th>
+            <th class="action-column" aria-label="상세"></th>
           </tr>
         </thead>
         <tbody>
           <tr v-if="isLoading">
-            <td colspan="4">프로젝트 목록을 불러오는 중입니다.</td>
+            <td colspan="5">프로젝트 목록을 불러오는 중입니다.</td>
           </tr>
           <tr v-else-if="errorMessage">
-            <td colspan="4" class="table-message error">{{ errorMessage }}</td>
+            <td colspan="5" class="table-message error">{{ errorMessage }}</td>
           </tr>
           <tr v-else-if="filteredProjects.length === 0">
-            <td colspan="4" class="table-message">표시할 프로젝트가 없습니다.</td>
+            <td colspan="5" class="table-message">표시할 프로젝트가 없습니다.</td>
           </tr>
           <template v-else>
             <tr v-for="project in filteredProjects" :key="project.projectId">
@@ -112,16 +291,25 @@ onMounted(() => {
                 <span>{{ project.subdomain }}</span>
               </td>
               <td>
-                <span class="status-badge" :class="project.status.toLowerCase()">
-                  {{ statusLabel[project.status] }}
+                <span class="status-badge" :class="getStatusClass(project)">
+                  {{ getProjectDisplayStatus(project) }}
                 </span>
               </td>
               <td>
-                <strong>{{ getActiveVersion(project) }}</strong>
-                <span>{{ project.lastDeployment?.status ?? '배포 이력 없음' }}</span>
+                <strong>{{ getActiveVersionLabel(project) }}</strong>
+                <span v-if="project.activeVersion" class="version-color" :class="project.activeVersion.color.toLowerCase()">
+                  ({{ project.activeVersion.color }})
+                </span>
+                <span v-else>활성 버전 없음</span>
               </td>
               <td>
-                <strong>{{ formatLastDeploy(project) }}</strong>
+                <strong>{{ formatLastDeployDate(project) }}</strong>
+                <span v-if="formatRelativeDeploy(project)">{{ formatRelativeDeploy(project) }}</span>
+              </td>
+              <td class="row-action-cell">
+                <button class="row-action-button" type="button" :aria-label="`${project.name} 상세 보기`">
+                  <ChevronRightIcon aria-hidden="true" />
+                </button>
               </td>
             </tr>
           </template>
@@ -130,10 +318,25 @@ onMounted(() => {
     </section>
 
     <nav class="pagination" aria-label="페이지 이동">
-      <button type="button" :disabled="currentPage === 0" @click="loadProjects(currentPage - 1)">‹</button>
-      <button class="active" type="button">{{ currentPage + 1 }}</button>
-      <button type="button" :disabled="currentPage + 1 >= totalPages" @click="loadProjects(currentPage + 1)">
-        ›
+      <button type="button" :disabled="currentPage === 0" aria-label="이전 페이지" @click="loadProjects(currentPage - 1)">
+        <ChevronLeftIcon aria-hidden="true" />
+      </button>
+      <button
+        v-for="page in visiblePages"
+        :key="page"
+        type="button"
+        :class="{ active: page === currentPage }"
+        @click="loadProjects(page)"
+      >
+        {{ page + 1 }}
+      </button>
+      <button
+        type="button"
+        :disabled="currentPage + 1 >= totalPages"
+        aria-label="다음 페이지"
+        @click="loadProjects(currentPage + 1)"
+      >
+        <ChevronRightIcon aria-hidden="true" />
       </button>
     </nav>
   </section>
