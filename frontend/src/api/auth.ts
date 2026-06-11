@@ -21,6 +21,11 @@ export interface LoginResponse {
   accessToken: string
   refreshToken: string
   accessTokenExpiresIn: number
+  user: {
+    email: string
+    name: string
+    role: string
+  }
 }
 
 interface ApiResponse<T> {
