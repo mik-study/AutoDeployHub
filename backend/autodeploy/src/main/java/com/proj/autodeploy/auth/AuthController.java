@@ -28,6 +28,8 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.of(response));
     }
 
+    // TODO : 로그인 응답값 추가할 요소 생각해보기
+    // 이메일/이름 정도 일단은
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<TokenResponse>> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(ApiResponse.of(authService.login(request)));

@@ -5,7 +5,7 @@
 >
 > - 팀: 2인 (현수, 민준)
 > - 저장소: `C:\khs\AutoDeployHub`
-> - 최종 갱신: 2026-06-08
+> - 최종 갱신: 2026-06-12
 
 ---
 
@@ -15,7 +15,8 @@
 | ----- | ----------------------- | ----------------------------------------------------------- | ------------------------------ |
 | 1주차 | ~2026-05-26             | 도메인 분석 + 아키텍처 다이어그램                           | ✅ 완료                        |
 | 2주차 | 2026-05-27 ~ 2026-06-02 | MVP 설계 통일 + 설계 산출물 + 프로젝트 init                 | ✅ 완료                        |
-| 3주차 | 2026-06-03 ~            | **코드 시작** — 인프라 기동 + 엔티티/인증 + 프론트 skeleton | 🚧 진행 중 (현수 ✅ / 민준 ✅) |
+| 3주차 | 2026-06-03 ~ 2026-06-12 | **코드 시작** — 인프라 기동 + 엔티티/인증 + 프론트 skeleton | ✅ 완료 (현수 ✅ / 민준 ✅) |
+| 4주차 | 2026-06-13 ~ 2026-06-19 | **배포 파이프라인 1차** — 수동 배포 E2E + 실시간 로그(SSE) + 환경변수 | 🚧 진행 예정 |
 
 ### 산출물 인덱스
 
@@ -193,7 +194,82 @@
 
 ---
 
-## 4. 변경 이력
+## 4. 4주차 — 배포 파이프라인 1차 (수동 배포 E2E) 🚧 진행 예정
+
+> 기간: **2026-06-13 ~ 2026-06-19 (1주)**
+>
+> 목표(DoD): 프론트 **[배포] 버튼** → Deployment 생성(QUEUED) → RabbitMQ `deploy.queue` →
+> Worker가 **git clone → docker build → 컨테이너 run → health check → SUCCEEDED**,
+> 그 진행 로그가 **SSE로 배포 상세 화면에 실시간 표시**. 환경변수 CRUD 화면 동작.
+> (Blue-Green 트래픽 전환 / rollback / Webhook 자동배포는 **5주차**)
+
+### 🔗 3주차 결과물을 잇는 연결축 (역할 분배 기준)
+
+이번 주 과제는 "각자 한 걸 이어가되, 둘의 결과를 **연결**"하도록 설계했다.
+
+| 연결 지점 | 민준(3주차: 프론트/인프라) | ↔ | 현수(3주차: 백엔드/도메인) |
+|---|---|---|---|
+| 배포 트리거 | 프로젝트 상세 **[배포] 버튼** | → | **Deployment API** → Queue → Worker |
+| 실시간 로그 | **EventSource 로그 뷰어** | ↔ | **SSE 스트림** 엔드포인트 |
+| 환경변수 | **환경변수 관리 화면** | ↔ | **Env API** (암호화/마스킹) |
+| 라우팅 | **Traefik**(3주차 PoC) 확장 | ↔ | Worker가 컨테이너에 **traefik label 부여** |
+
+### 👤 현수 담당 — 백엔드: deployment 도메인 이어가기
+
+> 3주차에 만든 **엔티티 7종 + DeploymentStatus 상태머신** 위에 "실제로 도는 배포 파이프라인"을 쌓는다.
+
+1. **Deployment API** (`05_api_spec.md §4`)
+   - `POST /api/projects/{id}/deployments` (202, Redis lock 획득 후 RabbitMQ publish, `PENDING→QUEUED`)
+   - `GET /api/projects/{id}/deployments` (이력, 페이지네이션) · `GET /api/deployments/{id}` (단건) · `POST /api/deployments/{id}/cancel`
+2. **RabbitMQ 연동 + Worker**
+   - `deploy.queue` 설정, `@RabbitListener` 컨슈머
+   - 메시지 처리 시 `Deployment.transitionTo()` 로 상태 전이 (3주차 상태머신 재사용)
+3. **Worker 파이프라인** (로컬 Docker, 단일 컨테이너 = 첫 배포 BLUE)
+   - git clone → Dockerfile 검사 → `docker build` → `docker run`(env 주입 + traefik label) → health check → `SUCCEEDED`/`FAILED`
+   - 각 단계 `DeploymentLog` 적재 (Docker 제어: docker-java 또는 CLI 호출)
+4. **SSE 실시간 로그** (`05_api_spec.md §4.6~4.7`)
+   - `GET /api/deployments/{id}/logs/stream` (text/event-stream, log/status/close 이벤트) + 스냅샷 `GET .../logs`
+5. **Redis 분산락** — 프로젝트별 배포 lock → 동시 배포 시 `DEPLOYMENT_ALREADY_IN_PROGRESS`(409)
+6. **EnvironmentVariable API** (`05_api_spec.md §3`) — `POST/GET/PATCH/DELETE /api/projects/{id}/env`, 값 **암호화 저장 + 조회 마스킹**, 컨테이너 run 시 주입
+
+> 우선순위: **1~5(배포 E2E + 로그)** 가 코어, 6(환경변수)은 민준 화면과 짝이므로 함께. 분량 과다 시 6은 키 등록/조회까지 우선.
+
+### 👤 민준 담당 — 프론트 & 인프라: 화면 이어가기 + Worker 구동 인프라
+
+> 3주차 로그인/목록/생성 화면과 compose/Traefik 위에, "배포를 눈으로 보는 화면"과 "Worker가 실제로 도는 인프라"를 얹는다.
+
+1. **프로젝트 상세 화면** (와이어프레임 기반) — 개요 + **[배포] 버튼** + 현재 상태/마지막 배포
+   - `GET /api/projects/{id}`, `POST /api/projects/{id}/deployments`
+2. **배포 이력 / 배포 상세 화면** — `GET /api/projects/{id}/deployments`, `GET /api/deployments/{id}`
+3. **실시간 로그 뷰어** — `EventSource` 로 `/api/deployments/{id}/logs/stream` 구독 → 로그/상태 실시간 렌더 (재연결 `Last-Event-ID` 고려)
+4. **환경변수 관리 화면** — 현수 Env API 연동 (목록/추가/수정/삭제, secret 마스킹 표시)
+5. **인프라 확장**
+   - Worker가 **호스트 Docker 제어** 가능하도록 compose에 docker socket 마운트/권한 정리
+   - RabbitMQ·Redis 백엔드 연동 확인 (management UI에서 메시지 흐름 관찰)
+   - Traefik로 **배포된 사용자 앱 서브도메인 접속** PoC (`project-{id}.autodeploy.test`)
+
+### 공통 / 모임
+
+- 모임 시작: **메시지 스키마**(`DeploymentRequested`) + **SSE 이벤트 포맷**(`05_api_spec.md §4.7`) 합의, Docker 제어 방식(docker-java vs CLI) 결정
+- 모임 끝: 수동 배포 **E2E 데모**, 5주차 범위(Blue-Green 전환·rollback·Webhook 자동배포) 확정
+
+### ⚠️ 4주차에 하지 말 것
+
+- **Blue-Green 트래픽 전환 / rollback** — 5주차
+- **Webhook 자동 배포** — 5주차
+- ELK / 다중 Queue / DLQ / AWS 실제 배포
+- 폴백 노트: 실제 `docker build` 가 시간 과다면, 빌드/실행을 **mock 스텁**으로 두고 **상태머신 + SSE E2E 배선부터** 완성 후 실제 Docker로 교체
+
+### ✅ 스프린트 완료 기준 (체크리스트)
+
+- [ ] [배포] 버튼 → `QUEUED` → Worker `SUCCEEDED` 까지 E2E 동작
+- [ ] 배포 진행 로그가 **SSE로 프론트에 실시간 표시**
+- [ ] 환경변수 CRUD 화면 동작 (백엔드 Env API 연동)
+- [ ] 배포된 앱이 **Traefik 서브도메인**으로 접속 (최소 1건)
+
+---
+
+## 5. 변경 이력
 
 | 일자       | 내용                                                                                                                 |
 | ---------- | -------------------------------------------------------------------------------------------------------------------- |
@@ -201,3 +277,4 @@
 | 2026-06-03 | 백엔드 스캐폴드 Kotlin → **Java 21** 전환                                                                            |
 | 2026-06-08 | **3주차 현수 과제 완료** — 7개 엔티티/enum, JWT 인증, Project CRUD, 상태머신 테스트, 빌드 그린화                     |
 | 2026-06-12 | **3주차 민준 과제 완료** - 로그인/회원가입/프로젝트 목록/프로젝트 생성 화면, JWT 인증 흐름, Traefik 로컬 라우팅 정리 |
+| 2026-06-12 | **4주차 과제 정의** — 배포 파이프라인 1차(수동 배포 E2E + SSE 로그 + 환경변수), 현수/민준 역할 분배 |

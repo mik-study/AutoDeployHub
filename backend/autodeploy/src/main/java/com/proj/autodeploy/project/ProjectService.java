@@ -2,6 +2,7 @@ package com.proj.autodeploy.project;
 
 import com.proj.autodeploy.global.error.ApiException;
 import com.proj.autodeploy.global.error.ErrorCode;
+import com.proj.autodeploy.global.security.JwtTokenProvider;
 import com.proj.autodeploy.project.domain.Project;
 import com.proj.autodeploy.project.domain.ProjectStatus;
 import com.proj.autodeploy.project.dto.CreateProjectRequest;
@@ -12,9 +13,12 @@ import com.proj.autodeploy.project.dto.UpdateProjectRequest;
 import java.security.SecureRandom;
 import java.util.HexFormat;
 import java.util.UUID;
+
+import com.proj.autodeploy.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -67,7 +71,8 @@ public class ProjectService {
 
         return CreateProjectResponse.from(project, WEBHOOK_URL, plainSecret);
     }
-
+    
+    // TODO : 트랜잭션 애노테이션 빼는걸로 검토
     @Transactional(readOnly = true)
     public Page<ProjectSummaryResponse> list(Long userId, Pageable pageable) {
         return projectRepository.findByOwnerIdAndStatus(userId, ProjectStatus.ACTIVE, pageable)
