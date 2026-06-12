@@ -290,7 +290,8 @@ input {
 }
 
 .search-field input,
-.field input {
+.field input,
+.field textarea {
   width: 100%;
   height: 58px;
   padding: 0 18px;
@@ -303,6 +304,13 @@ input {
 
 .field input {
   width: 100%;
+}
+
+.field textarea {
+  height: auto;
+  min-height: 120px;
+  padding: 16px 18px;
+  resize: vertical;
 }
 
 .search-field input {
@@ -336,7 +344,8 @@ input {
 }
 
 .search-field input:focus,
-.field input:focus {
+.field input:focus,
+.field textarea:focus {
   border-color: var(--primary);
   box-shadow: 0 0 0 4px rgba(7, 92, 255, 0.12);
 }
@@ -412,6 +421,113 @@ input {
   margin: 0;
   font-size: 24px;
   line-height: 1.25;
+}
+
+.project-form-panel {
+  padding: 32px;
+}
+
+.webhook-result-panel {
+  max-width: 980px;
+}
+
+.webhook-result-heading h2 {
+  margin: 0;
+  font-size: 28px;
+  line-height: 1.2;
+}
+
+.webhook-result-heading p {
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.webhook-result-grid {
+  margin-top: 28px;
+  display: grid;
+  gap: 20px;
+}
+
+.project-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px 24px;
+}
+
+.project-form-wide {
+  grid-column: 1 / -1;
+}
+
+.advanced-settings {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #e6ebf4;
+}
+
+.advanced-settings-toggle {
+  width: 100%;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: transparent;
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.advanced-settings-icon {
+  width: 20px;
+  height: 20px;
+  transition: transform 0.15s ease;
+}
+
+.advanced-settings-icon.open {
+  transform: rotate(180deg);
+}
+
+.advanced-settings-grid {
+  margin-top: 20px;
+}
+
+.result-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.result-row .secondary-button {
+  flex: 0 0 auto;
+  min-width: 88px;
+}
+
+.result-value {
+  min-height: 58px;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #f8fafc;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  font-weight: 700;
+  line-height: 1.5;
+  word-break: break-all;
+  flex: 1 1 auto;
+}
+
+.project-feedback {
+  margin-top: 24px;
+}
+
+.form-actions {
+  margin-top: 28px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
 }
 
 .data-table {
@@ -992,6 +1108,10 @@ input {
   .form-row {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .project-form-grid {
+    grid-template-columns: 1fr;
   }
 
   .search-field input {

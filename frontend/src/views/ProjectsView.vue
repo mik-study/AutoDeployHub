@@ -1,106 +1,19 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
   MagnifyingGlassIcon,
   PlusIcon,
 } from '@heroicons/vue/24/outline'
-import { getProjects, type ProjectItem } from '../api/projects'
+import { getMockProjectsPage, getProjects, type ProjectItem } from '../api/projects'
 
 type ProjectDisplayStatus = 'RUNNING' | 'PENDING' | 'FAILED'
 
 const PROJECTS_PAGE_SIZE = 5
-
-const mockProjects: ProjectItem[] = [
-  {
-    projectId: 1,
-    name: '배포 플랫폼',
-    subdomain: 'deploy-platform',
-    status: 'ACTIVE',
-    activeVersion: {
-      version: 'v1.2.3',
-      color: 'GREEN',
-    },
-    lastDeployment: {
-      deploymentId: 101,
-      status: 'SUCCEEDED',
-      finishedAt: createMinutesAgo(10),
-    },
-  },
-  {
-    projectId: 2,
-    name: '사용자 서비스',
-    subdomain: 'user-service',
-    status: 'ACTIVE',
-    activeVersion: {
-      version: 'v2.1.0',
-      color: 'BLUE',
-    },
-    lastDeployment: {
-      deploymentId: 102,
-      status: 'PENDING',
-      finishedAt: createMinutesAgo(60),
-    },
-  },
-  {
-    projectId: 3,
-    name: '주문 서비스',
-    subdomain: 'order-service',
-    status: 'ACTIVE',
-    activeVersion: {
-      version: 'v1.0.5',
-      color: 'BLUE',
-    },
-    lastDeployment: {
-      deploymentId: 103,
-      status: 'FAILED',
-      finishedAt: createMinutesAgo(19 * 60),
-    },
-  },
-  {
-    projectId: 4,
-    name: '결제 서비스',
-    subdomain: 'payment-service',
-    status: 'ACTIVE',
-    activeVersion: null,
-    lastDeployment: {
-      deploymentId: 104,
-      status: 'PENDING',
-      finishedAt: createMinutesAgo(24 * 60),
-    },
-  },
-  {
-    projectId: 5,
-    name: '알림 서비스',
-    subdomain: 'notification-service',
-    status: 'ACTIVE',
-    activeVersion: {
-      version: 'v1.3.0',
-      color: 'GREEN',
-    },
-    lastDeployment: {
-      deploymentId: 105,
-      status: 'SUCCEEDED',
-      finishedAt: createMinutesAgo(2 * 60),
-    },
-  },
-  {
-    projectId: 6,
-    name: 'API 게이트웨이',
-    subdomain: 'gateway-service',
-    status: 'ACTIVE',
-    activeVersion: {
-      version: 'v1.4.2',
-      color: 'BLUE',
-    },
-    lastDeployment: {
-      deploymentId: 106,
-      status: 'SUCCEEDED',
-      finishedAt: createMinutesAgo(35),
-    },
-  },
-]
+const route = useRoute()
+const router = useRouter()
 
 const projects = ref<ProjectItem[]>([])
 const searchKeyword = ref('')
@@ -108,6 +21,11 @@ const isLoading = ref(false)
 const errorMessage = ref('')
 const currentPage = ref(0)
 const totalPages = ref(1)
+const successMessage = computed(() => {
+  return route.query.created === '1' && typeof route.query.name === 'string'
+    ? `"${route.query.name}" 프로젝트가 생성되었습니다.`
+    : ''
+})
 
 const filteredProjects = computed(() => {
   const keyword = searchKeyword.value.trim().toLowerCase()
@@ -134,25 +52,6 @@ const visiblePages = computed(() => {
   return Array.from({ length: endPage - startPage + 1 }, (_, index) => startPage + index)
 })
 
-function createMinutesAgo(minutes: number) {
-  return new Date(Date.now() - minutes * 60 * 1000).toISOString()
-}
-
-function getMockProjectPage(page: number) {
-  const startIndex = page * PROJECTS_PAGE_SIZE
-  const data = mockProjects.slice(startIndex, startIndex + PROJECTS_PAGE_SIZE)
-
-  return {
-    data,
-    page: {
-      page,
-      size: PROJECTS_PAGE_SIZE,
-      totalElements: mockProjects.length,
-      totalPages: Math.max(Math.ceil(mockProjects.length / PROJECTS_PAGE_SIZE), 1),
-    },
-  }
-}
-
 async function loadProjects(page = 0) {
   isLoading.value = true
   errorMessage.value = ''
@@ -165,7 +64,7 @@ async function loadProjects(page = 0) {
     totalPages.value = Math.max(response.page.totalPages, 1)
   } catch {
     if (import.meta.env.DEV) {
-      const response = getMockProjectPage(page)
+      const response = getMockProjectsPage(page, PROJECTS_PAGE_SIZE)
 
       projects.value = response.data
       currentPage.value = response.page.page
@@ -239,6 +138,10 @@ function getActiveVersionLabel(project: ProjectItem) {
   return project.lastDeployment ? `#${project.lastDeployment.deploymentId}` : '-'
 }
 
+async function goToCreateProject() {
+  await router.push({ name: 'project-create' })
+}
+
 onMounted(() => {
   void loadProjects()
 })
@@ -257,11 +160,13 @@ onMounted(() => {
         <MagnifyingGlassIcon class="search-icon" aria-hidden="true" />
         <input v-model="searchKeyword" placeholder="프로젝트 검색..." />
       </label>
-      <button class="primary-button create-project-button" type="button">
+      <button class="primary-button create-project-button" type="button" @click="goToCreateProject">
         <PlusIcon class="button-icon" aria-hidden="true" />
         새 프로젝트
       </button>
     </div>
+
+    <p v-if="successMessage" class="form-success project-feedback">{{ successMessage }}</p>
 
     <section class="panel">
       <table class="data-table project-table">
