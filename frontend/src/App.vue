@@ -20,7 +20,7 @@ const isAuthLayout = computed(() => route.meta.layout === 'auth')
 const currentUser = computed(() => {
   return authStore.user ?? {
     name: 'user',
-    role: 'User',
+    email: '',
   }
 })
 
@@ -47,26 +47,26 @@ async function handleLogout() {
       </RouterLink>
 
       <nav class="sidebar-nav" aria-label="Primary">
-        <RouterLink to="/projects">
+        <RouterLink class="sidebar-nav-item sidebar-nav-projects" to="/projects">
           <FolderIcon class="nav-icon" aria-hidden="true" />
           프로젝트
         </RouterLink>
-        <button type="button">
+        <RouterLink class="sidebar-nav-item sidebar-nav-integration-channels" to="/integration-channels">
           <LinkIcon class="nav-icon" aria-hidden="true" />
           통합 채널
-        </button>
-        <button type="button">
+        </RouterLink>
+        <RouterLink class="sidebar-nav-item sidebar-nav-notification-settings" to="/notification-settings">
           <BellIcon class="nav-icon" aria-hidden="true" />
           알림 설정
-        </button>
-        <button type="button">
+        </RouterLink>
+        <RouterLink class="sidebar-nav-item sidebar-nav-user-management" to="/user-management">
           <UserGroupIcon class="nav-icon" aria-hidden="true" />
           사용자 관리
-        </button>
-        <button type="button">
+        </RouterLink>
+        <RouterLink class="sidebar-nav-item sidebar-nav-user-settings" to="/user-settings">
           <Cog6ToothIcon class="nav-icon" aria-hidden="true" />
           설정
-        </button>
+        </RouterLink>
       </nav>
 
       <div class="sidebar-user">
@@ -75,7 +75,7 @@ async function handleLogout() {
         </div>
         <div>
           <strong>{{ currentUser.name }}</strong>
-          <span>{{ currentUser.role }}</span>
+          <span>{{ currentUser.email }}</span>
         </div>
         <button class="sidebar-logout" type="button" aria-label="로그아웃" title="로그아웃" @click="handleLogout">
           <ArrowRightStartOnRectangleIcon aria-hidden="true" />

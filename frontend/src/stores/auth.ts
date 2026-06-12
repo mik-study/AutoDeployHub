@@ -12,13 +12,11 @@ import { getAccessToken, removeAuthTokens, setAuthTokens } from '../utils/authTo
 
 const DEV_LOGIN_EMAIL = 'admin@test.com'
 const DEV_LOGIN_PASSWORD = 'test1234'
-const DEV_LOGIN_ROLE = 'Administrator'
 const AUTH_USER_KEY = 'autodeploy.user'
 
 export interface AuthUser {
   email: string
   name: string
-  role: string
 }
 
 function getStoredUser() {
@@ -50,7 +48,6 @@ function createUserFromLoginResponse(response: LoginResponse, fallbackEmail: str
   return {
     email,
     name: response.user?.name || email.split('@')[0] || 'user',
-    role: response.user?.role || 'User',
   }
 }
 
@@ -79,7 +76,6 @@ export const useAuthStore = defineStore('auth', () => {
         const devUser = {
           email: DEV_LOGIN_EMAIL,
           name: DEV_LOGIN_EMAIL.split('@')[0],
-          role: DEV_LOGIN_ROLE,
         }
 
         setAuthTokens(devAccessToken, devRefreshToken)

@@ -12,6 +12,8 @@ const password = ref('')
 const passwordConfirm = ref('')
 const isSubmitting = ref(false)
 const errorMessage = ref('')
+const PASSWORD_MIN_LENGTH = 8
+const PASSWORD_MAX_LENGTH = 64
 
 const canSubmit = computed(() => {
   return name.value.trim() && email.value.trim() && password.value && passwordConfirm.value
@@ -22,6 +24,11 @@ async function handleSignup() {
 
   if (password.value !== passwordConfirm.value) {
     errorMessage.value = '비밀번호가 일치하지 않습니다.'
+    return
+  }
+
+  if (password.value.length < PASSWORD_MIN_LENGTH || password.value.length > PASSWORD_MAX_LENGTH) {
+    errorMessage.value = `비밀번호는 ${PASSWORD_MIN_LENGTH}자 이상 ${PASSWORD_MAX_LENGTH}자 이하로 입력해주세요.`
     return
   }
 
@@ -74,6 +81,8 @@ async function handleSignup() {
           name="input-password"
           autocomplete="new-password"
           required
+          :minlength="PASSWORD_MIN_LENGTH"
+          :maxlength="PASSWORD_MAX_LENGTH"
           type="password"
           placeholder="비밀번호를 입력하세요"
         />
@@ -86,6 +95,8 @@ async function handleSignup() {
           name="input-password-confirm"
           autocomplete="new-password"
           required
+          :minlength="PASSWORD_MIN_LENGTH"
+          :maxlength="PASSWORD_MAX_LENGTH"
           type="password"
           placeholder="비밀번호를 다시 입력하세요"
         />

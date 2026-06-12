@@ -1,6 +1,6 @@
 import { apiClient } from './client'
 
-export type ProjectStatus = 'ACTIVE' | 'INACTIVE' | 'FAILED' | 'PENDING' | 'RUNNING'
+export type ProjectStatus = 'ACTIVE' | 'ARCHIVED'
 export type DeploymentStatus = 'SUCCEEDED' | 'FAILED' | 'RUNNING' | 'PENDING'
 export type RuntimeColor = 'BLUE' | 'GREEN'
 

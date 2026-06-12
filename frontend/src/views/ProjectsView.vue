@@ -17,7 +17,7 @@ const mockProjects: ProjectItem[] = [
     projectId: 1,
     name: '배포 플랫폼',
     subdomain: 'deploy-platform',
-    status: 'RUNNING',
+    status: 'ACTIVE',
     activeVersion: {
       version: 'v1.2.3',
       color: 'GREEN',
@@ -32,7 +32,7 @@ const mockProjects: ProjectItem[] = [
     projectId: 2,
     name: '사용자 서비스',
     subdomain: 'user-service',
-    status: 'PENDING',
+    status: 'ACTIVE',
     activeVersion: {
       version: 'v2.1.0',
       color: 'BLUE',
@@ -47,7 +47,7 @@ const mockProjects: ProjectItem[] = [
     projectId: 3,
     name: '주문 서비스',
     subdomain: 'order-service',
-    status: 'FAILED',
+    status: 'ACTIVE',
     activeVersion: {
       version: 'v1.0.5',
       color: 'BLUE',
@@ -62,7 +62,7 @@ const mockProjects: ProjectItem[] = [
     projectId: 4,
     name: '결제 서비스',
     subdomain: 'payment-service',
-    status: 'PENDING',
+    status: 'ACTIVE',
     activeVersion: null,
     lastDeployment: {
       deploymentId: 104,
@@ -74,7 +74,7 @@ const mockProjects: ProjectItem[] = [
     projectId: 5,
     name: '알림 서비스',
     subdomain: 'notification-service',
-    status: 'RUNNING',
+    status: 'ACTIVE',
     activeVersion: {
       version: 'v1.3.0',
       color: 'GREEN',
@@ -89,7 +89,7 @@ const mockProjects: ProjectItem[] = [
     projectId: 6,
     name: 'API 게이트웨이',
     subdomain: 'gateway-service',
-    status: 'RUNNING',
+    status: 'ACTIVE',
     activeVersion: {
       version: 'v1.4.2',
       color: 'BLUE',
@@ -216,11 +216,11 @@ function formatRelativeDeploy(project: ProjectItem) {
 }
 
 function getProjectDisplayStatus(project: ProjectItem): ProjectDisplayStatus {
-  if (project.status === 'FAILED' || project.lastDeployment?.status === 'FAILED') {
+  if (project.lastDeployment?.status === 'FAILED') {
     return 'FAILED'
   }
 
-  if (project.status === 'RUNNING' || project.status === 'ACTIVE' || project.lastDeployment?.status === 'RUNNING') {
+  if (project.lastDeployment?.status === 'SUCCEEDED' || project.lastDeployment?.status === 'RUNNING') {
     return 'RUNNING'
   }
 
