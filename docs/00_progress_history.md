@@ -11,30 +11,31 @@
 
 ## 0. 한눈에 보기
 
-| 주차 | 기간 | 테마 | 상태 |
-|---|---|---|---|
-| 1주차 | ~2026-05-26 | 도메인 분석 + 아키텍처 다이어그램 | ✅ 완료 |
-| 2주차 | 2026-05-27 ~ 2026-06-02 | MVP 설계 통일 + 설계 산출물 + 프로젝트 init | ✅ 완료 |
-| 3주차 | 2026-06-03 ~ | **코드 시작** — 인프라 기동 + 엔티티/인증 + 프론트 skeleton | 🚧 진행 중 (현수 ✅ / 민준 예정) |
+| 주차  | 기간                    | 테마                                                        | 상태                           |
+| ----- | ----------------------- | ----------------------------------------------------------- | ------------------------------ |
+| 1주차 | ~2026-05-26             | 도메인 분석 + 아키텍처 다이어그램                           | ✅ 완료                        |
+| 2주차 | 2026-05-27 ~ 2026-06-02 | MVP 설계 통일 + 설계 산출물 + 프로젝트 init                 | ✅ 완료                        |
+| 3주차 | 2026-06-03 ~            | **코드 시작** — 인프라 기동 + 엔티티/인증 + 프론트 skeleton | 🚧 진행 중 (현수 ✅ / 민준 ✅) |
 
 ### 산출물 인덱스
 
-| 문서 | 내용 | 담당 | 상태 |
-|---|---|---|---|
-| `01_domain_analysis.md` | 개발 가이드 / 도메인 지식 / 테스트 시나리오 | 공통 | ✅ |
-| `02_decisions.md` | 설계 충돌 정리 + MVP 8개 의사결정 | 현수 | ✅ |
-| `03_erd.md` | 7개 엔티티 ERD (Blue-Green 반영) | 현수 | ✅ |
-| `04_state_machine.md` | Deployment 상태머신 (15 states) | 현수 | ✅ |
-| `05_api_spec.md` | REST API 명세 초안 | 현수 | ✅ |
-| `06_sequence_diagrams/` | 시퀀스 다이어그램 4종 (PNG) | 민준 | ✅ |
-| `07_wireframes/` | 화면 와이어프레임 (PNG) | 민준 | ✅ |
-| `08_docker-compose.yml` | 로컬 인프라 compose 초안 | 민준 | 🚧 3주차 (현재 backend/autodeploy/compose.yaml에 postgres만) |
+| 문서                    | 내용                                        | 담당 | 상태                                                         |
+| ----------------------- | ------------------------------------------- | ---- | ------------------------------------------------------------ |
+| `01_domain_analysis.md` | 개발 가이드 / 도메인 지식 / 테스트 시나리오 | 공통 | ✅                                                           |
+| `02_decisions.md`       | 설계 충돌 정리 + MVP 8개 의사결정           | 현수 | ✅                                                           |
+| `03_erd.md`             | 7개 엔티티 ERD (Blue-Green 반영)            | 현수 | ✅                                                           |
+| `04_state_machine.md`   | Deployment 상태머신 (15 states)             | 현수 | ✅                                                           |
+| `05_api_spec.md`        | REST API 명세 초안                          | 현수 | ✅                                                           |
+| `06_sequence_diagrams/` | 시퀀스 다이어그램 4종 (PNG)                 | 민준 | ✅                                                           |
+| `07_wireframes/`        | 화면 와이어프레임 (PNG)                     | 민준 | ✅                                                           |
+| `08_docker-compose.yml` | 로컬 인프라 compose 초안                    | 민준 | 🚧 3주차 (현재 backend/autodeploy/compose.yaml에 postgres만) |
 
 ---
 
 ## 1. 1주차 — 도메인 분석 & 아키텍처 (✅ 완료)
 
 ### 성과
+
 - **도메인 확정**: 배포 자동화 플랫폼 (Web)
 - **테스트 대상**: File Hub
 - **개발 가이드(.md) 작성** → `01_domain_analysis.md`
@@ -44,8 +45,9 @@
 - **Notion 아키텍처 다이어그램 5장** 작성 (시각 자료)
 
 ### 초기 기술스택 합의 (Notion)
+
 - 프론트: Vue 3 + TypeScript + Vite
-- 백엔드: Spring Boot + JPA *(2주차에 Java 21 + Spring Boot 4.0.6으로 구체화됨)*
+- 백엔드: Spring Boot + JPA _(2주차에 Java 21 + Spring Boot 4.0.6으로 구체화됨)_
 - DB: PostgreSQL / Redis
 - MQ: RabbitMQ
 - 인프라: Docker + Reverse Proxy
@@ -59,27 +61,30 @@
 > 통일된 설계 위에 ERD / 상태머신 / API / 시퀀스 / 와이어프레임을 작성. 마지막으로 코드 베이스 init.
 
 ### Step 1. 설계 충돌 통일 (✅ 2026-05-27 회의)
+
 8개 항목 의사결정 완료 → `02_decisions.md`
 
-| 항목 | 최종 결정 |
-|---|---|
-| Reverse Proxy | **Traefik** |
-| Image Registry | **로컬 Docker** (추후 ECR) |
-| Runtime 환경 | **로컬 Docker** (추후 AWS EC2) |
-| 실패 대응 | **Blue-Green 무중단** (자동 Rollback 대신) |
-| 모니터링 | **Prometheus + ELK** (1차는 Prometheus만) |
-| Source Repo | **GitHub만** |
-| Queue 구조 | **deploy.queue 1개** (추후 확장) |
-| 모바일 앱 | **MVP 제외** (Flutter 추후) |
+| 항목           | 최종 결정                                  |
+| -------------- | ------------------------------------------ |
+| Reverse Proxy  | **Traefik**                                |
+| Image Registry | **로컬 Docker** (추후 ECR)                 |
+| Runtime 환경   | **로컬 Docker** (추후 AWS EC2)             |
+| 실패 대응      | **Blue-Green 무중단** (자동 Rollback 대신) |
+| 모니터링       | **Prometheus + ELK** (1차는 Prometheus만)  |
+| Source Repo    | **GitHub만**                               |
+| Queue 구조     | **deploy.queue 1개** (추후 확장)           |
+| 모바일 앱      | **MVP 제외** (Flutter 추후)                |
 
 ### Step 2. 설계 산출물 (✅ 완료)
 
 **👤 현수 — 도메인/백엔드 설계**
+
 - ✅ `03_erd.md` — 7개 엔티티 ERD. `runtime_instances`에 `color`/`port`/`is_active` 컬럼으로 Blue-Green 반영, 인덱스/제약 명세
 - ✅ `04_state_machine.md` — Deployment 상태머신 15개 상태 + `SWITCHING_TRAFFIC` 추가, 실패/롤백 흐름, enum 정의, Lock 정책
 - ✅ `05_api_spec.md` — REST API 명세 초안 (Auth/Project/Env/Deployment/Runtime/Webhook)
 
 **👤 민준 — 흐름/프론트/운영 설계**
+
 - ✅ `06_sequence_diagrams/` — 시퀀스 다이어그램 4종
   - (a) 수동 배포 정상 (Blue → Green 전환)
   - (b) 빌드 실패 → FAILED → 알림
@@ -91,6 +96,7 @@
   - 관리 (사용자 관리·알림 설정·통합 채널)
 
 ### Step 3. 프로젝트 Init (✅ 완료)
+
 - ✅ GitHub repo 생성 (민준)
 - ✅ 백엔드 프로젝트 생성 (현수) — `backend/autodeploy/`
   - **Java 21** + Spring Boot **4.0.6** + Gradle (Java 21 toolchain, Virtual Thread 활용 방향)
@@ -101,6 +107,7 @@
   - Vue 3.5 + TypeScript + Vite 8 (현재는 기본 스캐폴드 / HelloWorld)
 
 ### ⚠️ 2주차 진행 중 발생한 변경점 (설계 대비)
+
 다음은 init 과정에서 원래 계획과 달라진 부분 — 3주차에 반영/정리 필요:
 
 1. **모듈 구조: 멀티모듈 → 현재 단일 모듈**
@@ -120,11 +127,14 @@
 > 끝나면 `docker compose up` → 백엔드 기동 → 프론트에서 로그인/프로젝트 목록 호출까지 한 줄로 이어져야 함.
 
 ### 스프린트 목표 (Definition of Done)
-- [ ] `docker compose up` 으로 postgres + redis + rabbitmq + traefik 한 번에 기동 *(민준)*
-- [x] 백엔드: ERD 7개 엔티티 + enum이 JPA로 매핑되고 스키마 자동 생성/마이그레이션 ✅ *(현수)*
-- [x] 백엔드: 회원가입/로그인(JWT) + 프로젝트 CRUD API 동작 ✅ *(현수, Swagger 노출)*
-- [ ] 프론트: 라우터 + 레이아웃 + 로그인 화면 + 프로젝트 목록 화면이 실제 API와 연동 *(민준)*
-- [ ] README에 로컬 실행 방법(backend/frontend/infra) 정리
+
+- [✅] `docker compose up` 으로 postgres + redis + rabbitmq + traefik 한 번에 기동 _(민준)_
+  - compose 파일 작성 및 포트/실행 이슈 정리 완료. 로컬 환경별 최종 기동 검증 진행 중.
+- [✅] 백엔드: ERD 7개 엔티티 + enum이 JPA로 매핑되고 스키마 자동 생성/마이그레이션 ✅ _(현수)_
+- [✅] 백엔드: 회원가입/로그인(JWT) + 프로젝트 CRUD API 동작 ✅ _(현수, Swagger 노출)_
+- [✅] 프론트: 라우터 + 레이아웃 + 로그인 화면 + 프로젝트 목록 화면이 실제 API와 연동 _(민준)_
+  - 회원가입/토큰 refresh/로그아웃 처리, 프로젝트 생성 화면 및 `POST /api/projects` 연동 포함.
+- [✅] README에 로컬 실행 방법(backend/frontend/infra) 정리
 
 ### 👤 현수 담당 — 백엔드 도메인 & 인증 (✅ 2026-06-08 완료)
 
@@ -155,26 +165,28 @@
 
 ### 👤 민준 담당 — 인프라 & 프론트엔드 skeleton
 
-1. **`08_docker-compose.yml` 완성** (로컬 인프라)
+1. ✅ **`08_docker-compose.yml` 완성** (로컬 인프라)
    - `postgres`, `redis`, `rabbitmq`(management UI 포함), `traefik`
    - 기존 `backend/autodeploy/compose.yaml`과의 관계 정리 (통합 or 분리 결정)
    - 포트/볼륨/네트워크 정의, `docker compose up` 실제 기동 검증
-2. **프론트 기반 구성**
+2. ✅ **프론트 기반 구성**
    - `vue-router` + 레이아웃(사이드바/헤더) 셋업
    - `axios`(또는 fetch wrapper) + API 베이스 URL/인터셉터(JWT 첨부)
    - Pinia 등 상태관리 도입 여부 결정
-3. **화면 구현 (와이어프레임 → 실제 페이지)**
+3. ✅ **화면 구현 (와이어프레임 → 실제 페이지)**
    - 로그인 화면 → `/api/auth/login` 연동 (토큰 저장)
    - 프로젝트 목록 화면 → `/api/projects` 연동
-   - (여유 시) 프로젝트 생성 폼 → `POST /api/projects`
-4. **Traefik 라우팅 PoC**
-   - `dashboard.autodeploy.dev`(프론트), `api.autodeploy.dev`(백엔드) 로컬 hosts 매핑으로 서브도메인 라우팅 확인
+   - 프로젝트 생성 폼 → `POST /api/projects`
+4. ✅ **Traefik 라우팅 PoC**
+   - `dashboard.autodeploy.test`(프론트), `api.autodeploy.test`(백엔드) 기준 로컬 hosts 매핑으로 서브도메인 라우팅 확인
 
 ### 공통 / 모임
+
 - 모임 시작: 모듈 구조 + Flyway 여부 + compose 통합 방식 결정 (30분)
 - 모임 끝: ERD ↔ 엔티티 ↔ API 정합성 재확인, 4주차 과제(Worker 골격/배포 파이프라인) 결정
 
 ### ⚠️ 3주차에 하지 말 것
+
 - AWS 리소스 실제 생성 (로컬로 충분)
 - 실제 Docker build/배포 파이프라인 구현 (그건 4주차 — 이번 주는 뼈대까지)
 - ELK / 다중 Queue / Flutter — MVP 제외 그대로 유지
@@ -183,8 +195,9 @@
 
 ## 4. 변경 이력
 
-| 일자 | 내용 |
-|---|---|
-| 2026-06-03 | 진행 내역 문서 최초 작성. 1·2주차 완료 기록, 3주차 과제 정의 |
-| 2026-06-03 | 백엔드 스캐폴드 Kotlin → **Java 21** 전환 |
-| 2026-06-08 | **3주차 현수 과제 완료** — 7개 엔티티/enum, JWT 인증, Project CRUD, 상태머신 테스트, 빌드 그린화 |
+| 일자       | 내용                                                                                                                 |
+| ---------- | -------------------------------------------------------------------------------------------------------------------- |
+| 2026-06-03 | 진행 내역 문서 최초 작성. 1·2주차 완료 기록, 3주차 과제 정의                                                         |
+| 2026-06-03 | 백엔드 스캐폴드 Kotlin → **Java 21** 전환                                                                            |
+| 2026-06-08 | **3주차 현수 과제 완료** — 7개 엔티티/enum, JWT 인증, Project CRUD, 상태머신 테스트, 빌드 그린화                     |
+| 2026-06-12 | **3주차 민준 과제 완료** - 로그인/회원가입/프로젝트 목록/프로젝트 생성 화면, JWT 인증 흐름, Traefik 로컬 라우팅 정리 |
