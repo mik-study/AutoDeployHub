@@ -12,12 +12,14 @@ import com.proj.autodeploy.project.dto.UpdateProjectRequest;
 import java.security.SecureRandom;
 import java.util.HexFormat;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 public class ProjectService {
 
     // MVP: 단일 호스트의 webhook 수신 endpoint. (운영 도메인 확정 시 설정으로 분리)
@@ -25,10 +27,6 @@ public class ProjectService {
 
     private final ProjectRepository projectRepository;
     private final SecureRandom secureRandom = new SecureRandom();
-
-    public ProjectService(ProjectRepository projectRepository) {
-        this.projectRepository = projectRepository;
-    }
 
     @Transactional
     public CreateProjectResponse create(Long userId, CreateProjectRequest request) {

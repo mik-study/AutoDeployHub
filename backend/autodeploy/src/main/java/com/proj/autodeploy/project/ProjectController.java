@@ -9,6 +9,7 @@ import com.proj.autodeploy.project.dto.ProjectResponse;
 import com.proj.autodeploy.project.dto.ProjectSummaryResponse;
 import com.proj.autodeploy.project.dto.UpdateProjectRequest;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -26,13 +27,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/projects")
+@RequiredArgsConstructor
 public class ProjectController {
 
     private final ProjectService projectService;
-
-    public ProjectController(ProjectService projectService) {
-        this.projectService = projectService;
-    }
 
     @PostMapping
     public ResponseEntity<ApiResponse<CreateProjectResponse>> create(
