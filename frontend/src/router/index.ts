@@ -4,6 +4,7 @@ import IntegrationChannelsView from '../views/IntegrationChannelsView.vue'
 import LoginView from '../views/LoginView.vue'
 import NotificationSettingsView from '../views/NotificationSettingsView.vue'
 import ProjectCreateView from '../views/ProjectCreateView.vue'
+import ProjectDetailView from '../views/ProjectDetailView.vue'
 import ProjectsView from '../views/ProjectsView.vue'
 import SignupView from '../views/SignupView.vue'
 import UserSettingsView from '../views/UserSettingsView.vue'
@@ -42,6 +43,17 @@ const routes: RouteRecordRaw[] = [
     path: '/projects/new',
     name: 'project-create',
     component: ProjectCreateView,
+    meta: {
+      requiresAuth: true,
+    },
+  },
+  {
+    path: '/projects/:projectId',
+    name: 'project-detail',
+    component: ProjectDetailView,
+    props: (route) => ({
+      projectId: Number(route.params.projectId),
+    }),
     meta: {
       requiresAuth: true,
     },

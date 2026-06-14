@@ -46,6 +46,30 @@ export interface CreateProjectResponse {
   createdAt: string
 }
 
+export interface ProjectDetail {
+  projectId: number
+  name: string
+  description: string | null
+  repositoryUrl: string
+  defaultBranch: string
+  rootDirectory: string | null
+  buildType: string
+  healthCheckPath: string
+  healthCheckPort: number
+  healthCheckTimeoutSeconds: number
+  healthCheckIntervalSeconds: number
+  subdomain: string
+  webhookSecret: string
+  status: ProjectStatus
+  createdAt: string
+}
+
+export interface DeploymentRequestResponse {
+  deploymentId: number
+  status: string
+  queuedAt?: string
+}
+
 export interface PageInfo {
   page: number
   size: number
@@ -192,8 +216,22 @@ export async function getProjects(page = 0, size = 20) {
   return response.data
 }
 
+export async function getProject(projectId: number) {
+  const response = await apiClient.get<{ data: ProjectDetail }>(`/projects/${projectId}`)
+
+  return response.data.data
+}
+
 export async function createProject(payload: CreateProjectRequest) {
   const response = await apiClient.post<{ data: CreateProjectResponse }>('/projects', payload)
+
+  return response.data.data
+}
+
+export async function requestDeployment(projectId: number) {
+  const response = await apiClient.post<{ data: DeploymentRequestResponse }>(
+    `/projects/${projectId}/deployments`,
+  )
 
   return response.data.data
 }
@@ -210,6 +248,32 @@ export function getMockProjectsPage(page = 0, size = 20): ProjectListResponse {
       totalElements: projects.length,
       totalPages: Math.max(Math.ceil(projects.length / size), 1),
     },
+  }
+}
+
+export function getMockProject(projectId: number): ProjectDetail | null {
+  const project = getStoredMockProjects().find((item) => item.projectId === projectId)
+
+  if (!project) {
+    return null
+  }
+
+  return {
+    projectId: project.projectId,
+    name: project.name,
+    description: `${project.name}의 배포 설정과 최근 상태를 확인합니다.`,
+    repositoryUrl: `https://github.com/example-team/${project.subdomain}.git`,
+    defaultBranch: 'main',
+    rootDirectory: '/',
+    buildType: 'DOCKERFILE',
+    healthCheckPath: '/health',
+    healthCheckPort: 8080,
+    healthCheckTimeoutSeconds: 30,
+    healthCheckIntervalSeconds: 10,
+    subdomain: project.subdomain,
+    webhookSecret: 'whs_****',
+    status: project.status,
+    createdAt: createMinutesAgo(24 * 60),
   }
 }
 

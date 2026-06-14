@@ -142,6 +142,15 @@ async function goToCreateProject() {
   await router.push({ name: 'project-create' })
 }
 
+async function goToProjectDetail(project: ProjectItem) {
+  await router.push({
+    name: 'project-detail',
+    params: {
+      projectId: project.projectId,
+    },
+  })
+}
+
 onMounted(() => {
   void loadProjects()
 })
@@ -212,7 +221,12 @@ onMounted(() => {
                 <span v-if="formatRelativeDeploy(project)">{{ formatRelativeDeploy(project) }}</span>
               </td>
               <td class="row-action-cell">
-                <button class="row-action-button" type="button" :aria-label="`${project.name} 상세 보기`">
+                <button
+                  class="row-action-button"
+                  type="button"
+                  :aria-label="`${project.name} 상세 보기`"
+                  @click="goToProjectDetail(project)"
+                >
                   <ChevronRightIcon aria-hidden="true" />
                 </button>
               </td>

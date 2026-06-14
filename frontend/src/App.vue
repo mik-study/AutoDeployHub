@@ -17,6 +17,7 @@ const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 const isAuthLayout = computed(() => route.meta.layout === 'auth')
+const isProjectsActive = computed(() => route.path.startsWith('/projects'))
 const currentUser = computed(() => {
   return authStore.user ?? {
     name: 'user',
@@ -47,7 +48,11 @@ async function handleLogout() {
       </RouterLink>
 
       <nav class="sidebar-nav" aria-label="Primary">
-        <RouterLink class="sidebar-nav-item sidebar-nav-projects" to="/projects">
+        <RouterLink
+          class="sidebar-nav-item sidebar-nav-projects"
+          :class="{ active: isProjectsActive }"
+          to="/projects"
+        >
           <FolderIcon class="nav-icon" aria-hidden="true" />
           프로젝트
         </RouterLink>
