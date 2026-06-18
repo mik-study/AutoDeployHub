@@ -2,7 +2,7 @@
 
 ## 1. 목적
 
-`docs/08_docker_compose/docker-compose.yml`로 AutoDeploy 로컬 인프라가 정상 기동되는지 검증한다.
+루트의 `docker-compose.yml`로 AutoDeploy 로컬 인프라가 정상 기동되는지 검증한다.
 
 검증 범위는 다음과 같다.
 
@@ -15,7 +15,7 @@
 ## 2. 실행 대상
 
 ```bash
-docker compose -f docs/08_docker_compose/docker-compose.yml up -d
+docker compose up -d
 ```
 
 구성 서비스:
@@ -40,7 +40,7 @@ autodeploy-network
 ### 3-1. Compose 설정 확인
 
 ```bash
-docker compose -f docs/08_docker_compose/docker-compose.yml config
+docker compose config
 ```
 
 기대 결과:
@@ -52,7 +52,7 @@ docker compose -f docs/08_docker_compose/docker-compose.yml config
 ### 3-2. 컨테이너 상태 확인
 
 ```bash
-docker compose -f docs/08_docker_compose/docker-compose.yml ps
+docker compose ps
 ```
 
 기대 결과:
@@ -69,7 +69,7 @@ autodeploy-traefik    Up ... (healthy)
 PostgreSQL:
 
 ```bash
-docker exec autodeploy-postgres pg_isready -U autodeploy_user -d autodeploy_db
+docker exec autodeploy-postgres pg_isready -U postgres -d autodeploy
 ```
 
 Redis:
@@ -114,7 +114,7 @@ password: autodeploy_password
 URL:
 
 ```text
-http://localhost:8080
+http://localhost:8082
 ```
 
 기본적으로 다음 internal router가 표시된다.
@@ -232,13 +232,13 @@ docker rm -f whoami-demo
 로컬 인프라 전체 종료:
 
 ```bash
-docker compose -f docs/08_docker_compose/docker-compose.yml down
+docker compose down
 ```
 
 볼륨까지 초기화:
 
 ```bash
-docker compose -f docs/08_docker_compose/docker-compose.yml down -v
+docker compose down -v
 ```
 
 `down -v`는 PostgreSQL, Redis, RabbitMQ 데이터 볼륨까지 삭제하므로 테스트 데이터를 보존해야 하면 사용하지 않는다.

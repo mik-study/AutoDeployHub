@@ -16,9 +16,9 @@
 
 ## 2. 항목별 진행 결과
 
-### 2.1 `08_docker-compose.yml` 로컬 인프라 구성
+### 2.1 `docker-compose.yml` 로컬 인프라 구성
 
-`docs/08_docker_compose/docker-compose.yml` 기준으로 다음 서비스를 한 번에 기동하는 구성을 정리했다.
+루트 `docker-compose.yml` 기준으로 다음 서비스를 한 번에 기동하는 구성을 정리했다.
 
 - `postgres`
 - `redis`
@@ -30,7 +30,7 @@
 주요 정리 사항:
 
 - `backend/autodeploy/compose.yaml`은 **백엔드 단독 로컬 보조용**에 가깝고,
-  `docs/08_docker_compose/docker-compose.yml`은 **프론트/백엔드/인프라를 함께 올리는 통합 실행용**으로 역할을 분리했다.
+  루트 `docker-compose.yml`은 **프론트/백엔드/인프라를 함께 올리는 통합 실행용**으로 역할을 분리했다.
 - 네트워크는 `autodeploy-network`로 통일했다.
 - DB/Redis/RabbitMQ/Gradle/npm 의존성 캐시를 위해 volume을 정의했다.
 - Traefik이 `Host` 기반으로 프론트/백엔드 라우팅을 처리하도록 label을 설정했다.
@@ -44,7 +44,7 @@
 
 - 프론트: `http://dashboard.autodeploy.test:8081`
 - 백엔드 API: `http://api.autodeploy.test:8081/api`
-- Traefik Dashboard: `http://localhost:8080`
+- Traefik Dashboard: `http://localhost:8082`
 
 ---
 
