@@ -7,7 +7,7 @@ import {
   MagnifyingGlassIcon,
   PlusIcon,
 } from '@heroicons/vue/24/outline'
-import { getMockProjectsPage, getProjects, type ProjectItem } from '../api/projects'
+import { getMockProjectsPage, getProjects, type ProjectItem } from '../../api/projects'
 
 type ProjectDisplayStatus = 'RUNNING' | 'PENDING' | 'FAILED'
 
@@ -144,7 +144,7 @@ async function goToCreateProject() {
 
 async function goToProjectDetail(project: ProjectItem) {
   await router.push({
-    name: 'project-detail',
+    name: 'project-detail-overview',
     params: {
       projectId: project.projectId,
     },

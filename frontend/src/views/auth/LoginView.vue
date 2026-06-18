@@ -13,10 +13,10 @@ import {
 } from '@heroicons/vue/24/outline'
 import { siGithub } from 'simple-icons'
 import { computed, ref } from 'vue'
-import deploymentHeroImage from '../assets/images/autodeployhub-hero-bg.png'
-import logoIconImage from '../assets/images/autodeployhub-logo-icon.png'
+import deploymentHeroImage from '../../assets/images/autodeployhub-hero-bg.png'
+import logoIconImage from '../../assets/images/autodeployhub-logo-icon.png'
 import { useRoute, useRouter } from 'vue-router'
-import { useAuthStore } from '../stores/auth'
+import { useAuthStore } from '../../stores/auth'
 
 const githubIconPath = siGithub.path
 

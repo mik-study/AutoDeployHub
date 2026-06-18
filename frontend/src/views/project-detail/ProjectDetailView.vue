@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, provide, ref, watch } from 'vue'
+import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import {
   ArrowLeftIcon,
   BoltIcon,
-  CheckCircleIcon,
   Cog6ToothIcon,
   CubeIcon,
   ExclamationTriangleIcon,
@@ -14,12 +13,14 @@ import {
   getProject,
   requestDeployment,
   type ProjectDetail,
-} from '../api/projects'
+} from '../../api/projects'
+import { projectDetailContextKey } from './projectDetailContext'
 
 const props = defineProps<{
   projectId: number
 }>()
 
+const route = useRoute()
 const router = useRouter()
 const project = ref<ProjectDetail | null>(null)
 const isLoading = ref(false)
@@ -35,7 +36,20 @@ const statusLabel = computed(() => {
   return project.value.status === 'ACTIVE' ? 'RUNNING' : project.value.status
 })
 
-const tabs = ['개요', '배포 이력', '환경 변수', 'Webhook', '모니터링', '로그']
+const tabs = [
+  { label: '개요', routeName: 'project-detail-overview' },
+  { label: '배포 이력', routeName: 'project-detail-deployments' },
+  { label: '환경 변수', routeName: 'project-detail-environment' },
+  { label: 'Webhook', routeName: 'project-detail-webhook' },
+  { label: '모니터링', routeName: 'project-detail-monitoring' },
+  { label: '로그', routeName: 'project-detail-logs' },
+]
+
+provide(projectDetailContextKey, {
+  project,
+  statusLabel,
+  formatDate,
+})
 
 async function loadProject() {
   isLoading.value = true
@@ -94,9 +108,10 @@ function formatDate(value: string) {
   }).format(new Date(value))
 }
 
-onMounted(() => {
+// projectId가 바뀔 때도 자동으로 다시 조회하도록 watch 사용
+watch(() => props.projectId, () => {
   void loadProject()
-})
+}, { immediate: true })
 </script>
 
 <template>
@@ -157,106 +172,19 @@ onMounted(() => {
       </dl>
 
       <nav class="project-tabs" aria-label="프로젝트 상세 탭">
-        <button
+        <RouterLink
           v-for="tab in tabs"
-          :key="tab"
-          type="button"
-          :class="{ active: tab === '개요' }"
+          :key="tab.routeName"
+          :to="{ name: tab.routeName, params: { projectId: props.projectId } }"
+          :class="{ active: route.name === tab.routeName }"
         >
-          {{ tab }}
-        </button>
+          {{ tab.label }}
+        </RouterLink>
       </nav>
 
       <p v-if="deployMessage" class="form-success project-feedback">{{ deployMessage }}</p>
       <p v-if="errorMessage" class="form-error project-feedback">{{ errorMessage }}</p>
-
-      <div class="overview-grid">
-        <section class="panel detail-card summary-card overview-summary-card">
-          <h2>배포 요약</h2>
-          <dl class="detail-list compact">
-            <div>
-              <dt>현재 버전</dt>
-              <dd>v1.2.2 <span class="version-color blue">(BLUE)</span></dd>
-            </div>
-            <div>
-              <dt>이전 배포 버전</dt>
-              <dd>v1.2.1 <span class="version-color green">(GREEN)</span></dd>
-            </div>
-            <div>
-              <dt>최근 배포</dt>
-              <dd>2025-05-16 14:30:22</dd>
-            </div>
-            <div>
-              <dt>배포 상태</dt>
-              <dd><span class="status-badge running">{{ statusLabel }}</span></dd>
-            </div>
-            <div>
-              <dt>업타임</dt>
-              <dd>2일 14시간 32분</dd>
-            </div>
-            <div>
-              <dt>Health Check</dt>
-              <dd class="health-ok"><CheckCircleIcon aria-hidden="true" /> 정상</dd>
-            </div>
-          </dl>
-        </section>
-
-        <section class="panel detail-card">
-          <h2>서비스 정보</h2>
-          <dl class="detail-list compact">
-            <div>
-              <dt>애플리케이션</dt>
-              <dd>{{ project.name }}</dd>
-            </div>
-            <div>
-              <dt>포트</dt>
-              <dd>{{ project.healthCheckPort }}</dd>
-            </div>
-            <div>
-              <dt>컨테이너 이미지</dt>
-              <dd>registry.example.com/{{ project.subdomain }}:1.2.2</dd>
-            </div>
-            <div>
-              <dt>환경</dt>
-              <dd>production</dd>
-            </div>
-            <div>
-              <dt>인스턴스</dt>
-              <dd>2 / 2</dd>
-            </div>
-            <div>
-              <dt>로드밸런서</dt>
-              <dd>Traefik</dd>
-            </div>
-          </dl>
-        </section>
-
-        <section class="panel detail-card resource-card">
-          <h2>리소스 사용 현황</h2>
-          <div class="resource-grid">
-            <article class="resource-item blue">
-              <div class="resource-ring"><span>23%</span></div>
-              <strong>CPU</strong>
-              <small>0.46 / 2 CPU</small>
-            </article>
-            <article class="resource-item green">
-              <div class="resource-ring"><span>45%</span></div>
-              <strong>메모리</strong>
-              <small>920MB / 2GB</small>
-            </article>
-            <article class="resource-item dark">
-              <div class="resource-ring"><span>31%</span></div>
-              <strong>디스크</strong>
-              <small>15GB / 50GB</small>
-            </article>
-            <article class="resource-item teal">
-              <div class="resource-ring"><span>12%</span></div>
-              <strong>네트워크</strong>
-              <small>120Mbps</small>
-            </article>
-          </div>
-        </section>
-      </div>
+      <RouterView />
     </template>
   </section>
 </template>

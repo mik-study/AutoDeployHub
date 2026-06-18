@@ -2,7 +2,7 @@
 import { ChevronDownIcon } from '@heroicons/vue/24/outline'
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { createMockProject, createProject, type CreateProjectResponse } from '../api/projects'
+import { createMockProject, createProject, type CreateProjectResponse } from '../../api/projects'
 
 const router = useRouter()
 
