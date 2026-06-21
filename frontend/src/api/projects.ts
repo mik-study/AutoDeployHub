@@ -34,6 +34,17 @@ export interface CreateProjectRequest {
   subdomain?: string
 }
 
+export interface UpdateProjectRequest {
+  name?: string
+  description?: string
+  defaultBranch?: string
+  rootDirectory?: string
+  healthCheckPath?: string
+  healthCheckPort?: number
+  healthCheckTimeoutSeconds?: number
+  healthCheckIntervalSeconds?: number
+}
+
 export interface CreateProjectResponse {
   projectId: number
   name: string
@@ -228,6 +239,16 @@ export async function createProject(payload: CreateProjectRequest) {
   return response.data.data
 }
 
+export async function updateProject(projectId: number, payload: UpdateProjectRequest) {
+  const response = await apiClient.patch<{ data: ProjectDetail }>(`/projects/${projectId}`, payload)
+
+  return response.data.data
+}
+
+export async function deleteProject(projectId: number) {
+  await apiClient.delete(`/projects/${projectId}`)
+}
+
 export async function requestDeployment(projectId: number) {
   const response = await apiClient.post<{ data: DeploymentRequestResponse }>(
     `/projects/${projectId}/deployments`,
@@ -304,4 +325,40 @@ export function createMockProject(payload: CreateProjectRequest): CreateProjectR
     webhookSecret: `whs_mock_${projectId}`,
     createdAt,
   }
+}
+
+export function updateMockProject(
+  project: ProjectDetail,
+  payload: UpdateProjectRequest,
+): ProjectDetail {
+  const projects = getStoredMockProjects()
+
+  setStoredMockProjects(projects.map((item) => {
+    if (item.projectId !== project.projectId) {
+      return item
+    }
+
+    return {
+      ...item,
+      name: payload.name?.trim() || item.name,
+    }
+  }))
+
+  return {
+    ...project,
+    name: payload.name?.trim() || project.name,
+    description: payload.description ?? project.description,
+    defaultBranch: payload.defaultBranch?.trim() || project.defaultBranch,
+    rootDirectory: payload.rootDirectory?.trim() || null,
+    healthCheckPath: payload.healthCheckPath?.trim() || project.healthCheckPath,
+    healthCheckPort: payload.healthCheckPort ?? project.healthCheckPort,
+    healthCheckTimeoutSeconds:
+      payload.healthCheckTimeoutSeconds ?? project.healthCheckTimeoutSeconds,
+    healthCheckIntervalSeconds:
+      payload.healthCheckIntervalSeconds ?? project.healthCheckIntervalSeconds,
+  }
+}
+
+export function deleteMockProject(projectId: number) {
+  setStoredMockProjects(getStoredMockProjects().filter((project) => project.projectId !== projectId))
 }

@@ -353,7 +353,8 @@ input {
 }
 
 .primary-button,
-.secondary-button {
+.secondary-button,
+.danger-button {
   min-height: 48px;
   padding: 0 22px;
   border: 1px solid transparent;
@@ -388,6 +389,7 @@ input {
 }
 
 .primary-button:disabled,
+.danger-button:disabled,
 .pagination button:disabled {
   cursor: not-allowed;
   opacity: 0.55;
@@ -397,6 +399,17 @@ input {
   color: #172554;
   background: #ffffff;
   border-color: var(--border);
+}
+
+.danger-button {
+  color: #b91c1c;
+  background: #ffffff;
+  border-color: #fecaca;
+}
+
+.danger-button:hover {
+  background: #fef2f2;
+  border-color: #fca5a5;
 }
 
 .wide {
@@ -1015,6 +1028,62 @@ input {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  padding: 24px;
+  background: rgba(2, 11, 32, 0.48);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-panel {
+  width: min(760px, 100%);
+  max-height: min(820px, calc(100vh - 48px));
+  padding: 30px;
+  overflow-y: auto;
+}
+
+.modal-header {
+  margin-bottom: 24px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.modal-header h2 {
+  margin: 0;
+  color: var(--text);
+  font-size: 26px;
+  line-height: 1.2;
+}
+
+.modal-header p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.modal-close {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border-radius: 999px;
+  background: #f8fafc;
+  color: #33466f;
+  font-size: 26px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.modal-close:hover {
+  background: #eef4ff;
+  color: var(--primary);
 }
 
 .data-table {
