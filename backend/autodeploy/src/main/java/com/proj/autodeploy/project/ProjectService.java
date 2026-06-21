@@ -106,7 +106,13 @@ public class ProjectService {
         project.archive(); // soft delete
     }
 
-    private Project getOwnedProject(Long userId, Long projectId) {
+    /**
+     * 프로젝트 조회 + 소유권 검증. 다른 도메인 서비스(예: deployment)에서 재사용하도록 public.
+     *
+     * @throws ApiException PROJECT_NOT_FOUND(404) / PROJECT_ACCESS_DENIED(403)
+     */
+    @Transactional(readOnly = true)
+    public Project getOwnedProject(Long userId, Long projectId) {
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> ApiException.of(ErrorCode.PROJECT_NOT_FOUND, "projectId", projectId));
         if (!project.isOwnedBy(userId)) {
