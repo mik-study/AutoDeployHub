@@ -20,6 +20,7 @@ import {
   type ProjectDetail,
   type UpdateProjectRequest,
 } from '../../api/projects'
+import ProjectEditModal from './ProjectEditModal.vue'
 import { projectDetailContextKey } from './projectDetailContext'
 
 const props = defineProps<{
@@ -144,8 +145,8 @@ function closeEditModal() {
   isEditModalOpen.value = false
 }
 
-async function handleUpdateProject() {
-  if (!project.value || !editForm.value.name?.trim()) {
+async function handleUpdateProject(editForm: UpdateProjectRequest) {
+  if (!project.value || !editForm.name?.trim()) {
     return
   }
 
@@ -154,14 +155,14 @@ async function handleUpdateProject() {
   deployMessage.value = ''
 
   const payload: UpdateProjectRequest = {
-    name: editForm.value.name.trim(),
-    description: editForm.value.description?.trim() || '',
-    defaultBranch: editForm.value.defaultBranch?.trim() || 'main',
-    rootDirectory: editForm.value.rootDirectory?.trim() || '/',
-    healthCheckPath: editForm.value.healthCheckPath?.trim() || '/health',
-    healthCheckPort: Number(editForm.value.healthCheckPort),
-    healthCheckTimeoutSeconds: Number(editForm.value.healthCheckTimeoutSeconds),
-    healthCheckIntervalSeconds: Number(editForm.value.healthCheckIntervalSeconds),
+    name: editForm.name.trim(),
+    description: editForm.description?.trim() || '',
+    defaultBranch: editForm.defaultBranch?.trim() || 'main',
+    rootDirectory: editForm.rootDirectory?.trim() || '/',
+    healthCheckPath: editForm.healthCheckPath?.trim() || '/health',
+    healthCheckPort: Number(editForm.healthCheckPort),
+    healthCheckTimeoutSeconds: Number(editForm.healthCheckTimeoutSeconds),
+    healthCheckIntervalSeconds: Number(editForm.healthCheckIntervalSeconds),
   }
 
   try {
@@ -303,66 +304,14 @@ watch(() => props.projectId, () => {
       <p v-if="errorMessage" class="form-error project-feedback">{{ errorMessage }}</p>
       <RouterView />
 
-      <div v-if="isEditModalOpen" class="modal-backdrop" role="presentation" @click.self="closeEditModal">
-        <form class="panel modal-panel project-edit-modal" @submit.prevent="handleUpdateProject">
-          <header class="modal-header">
-            <div>
-              <h2>프로젝트 수정</h2>
-              <p>{{ project.name }} 설정을 변경합니다.</p>
-            </div>
-            <button class="modal-close" type="button" aria-label="닫기" @click="closeEditModal">×</button>
-          </header>
-
-          <div class="project-form-grid">
-            <label class="field">
-              <span class="field-label">프로젝트명</span>
-              <input v-model="editForm.name" required type="text" />
-            </label>
-
-            <label class="field">
-              <span class="field-label">기본 브랜치</span>
-              <input v-model="editForm.defaultBranch" type="text" />
-            </label>
-
-            <label class="field project-form-wide">
-              <span class="field-label">설명</span>
-              <textarea v-model="editForm.description" rows="3"></textarea>
-            </label>
-
-            <label class="field">
-              <span class="field-label">루트 디렉터리</span>
-              <input v-model="editForm.rootDirectory" type="text" />
-            </label>
-
-            <label class="field">
-              <span class="field-label">헬스 체크 경로</span>
-              <input v-model="editForm.healthCheckPath" type="text" />
-            </label>
-
-            <label class="field">
-              <span class="field-label">헬스 체크 포트</span>
-              <input v-model.number="editForm.healthCheckPort" min="1" type="number" />
-            </label>
-
-            <label class="field">
-              <span class="field-label">헬스 체크 타임아웃(초)</span>
-              <input v-model.number="editForm.healthCheckTimeoutSeconds" min="1" type="number" />
-            </label>
-
-            <label class="field">
-              <span class="field-label">헬스 체크 주기(초)</span>
-              <input v-model.number="editForm.healthCheckIntervalSeconds" min="1" type="number" />
-            </label>
-          </div>
-
-          <div class="form-actions">
-            <button class="secondary-button" type="button" @click="closeEditModal">취소</button>
-            <button class="primary-button" :disabled="isSaving || !editForm.name?.trim()" type="submit">
-              {{ isSaving ? '저장 중...' : '저장' }}
-            </button>
-          </div>
-        </form>
-      </div>
+      <ProjectEditModal
+        v-if="isEditModalOpen"
+        :initial-value="editForm"
+        :is-saving="isSaving"
+        :project-name="project.name"
+        @close="closeEditModal"
+        @submit="handleUpdateProject"
+      />
     </template>
   </section>
 </template>

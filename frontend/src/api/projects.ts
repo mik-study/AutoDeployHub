@@ -75,6 +75,16 @@ export interface ProjectDetail {
   createdAt: string
 }
 
+interface MockProjectDetailOverrides {
+  description?: string | null
+  defaultBranch?: string
+  rootDirectory?: string | null
+  healthCheckPath?: string
+  healthCheckPort?: number
+  healthCheckTimeoutSeconds?: number
+  healthCheckIntervalSeconds?: number
+}
+
 export interface DeploymentRequestResponse {
   deploymentId: number
   status: string
@@ -183,6 +193,29 @@ const defaultMockProjects: ProjectItem[] = [
   },
 ]
 
+const defaultMockProjectDetails: Record<number, MockProjectDetailOverrides> = {
+  1: {
+    description: '배포 플랫폼의 배포 설정과 최근 상태를 확인합니다.',
+  },
+  2: {
+    description: '사용자 서비스의 배포 설정과 최근 상태를 확인합니다.',
+  },
+  3: {
+    description: '주문 서비스의 배포 설정과 최근 상태를 확인합니다.',
+  },
+  4: {
+    description: '결제 서비스의 배포 설정과 최근 상태를 확인합니다.',
+  },
+  5: {
+    description: '알림 서비스의 배포 설정과 최근 상태를 확인합니다.',
+  },
+  6: {
+    description: 'API 게이트웨이의 배포 설정과 최근 상태를 확인합니다.',
+  },
+}
+
+const MOCK_PROJECT_DETAILS_STORAGE_KEY = 'autodeploy.mockProjectDetails'
+
 function createMinutesAgo(minutes: number) {
   return new Date(Date.now() - minutes * 60 * 1000).toISOString()
 }
@@ -214,6 +247,32 @@ function getStoredMockProjects() {
 
 function setStoredMockProjects(projects: ProjectItem[]) {
   localStorage.setItem(MOCK_PROJECTS_STORAGE_KEY, JSON.stringify(projects))
+}
+
+function getStoredMockProjectDetails() {
+  const value = localStorage.getItem(MOCK_PROJECT_DETAILS_STORAGE_KEY)
+
+  if (!value) {
+    localStorage.setItem(
+      MOCK_PROJECT_DETAILS_STORAGE_KEY,
+      JSON.stringify(defaultMockProjectDetails),
+    )
+    return { ...defaultMockProjectDetails }
+  }
+
+  try {
+    return JSON.parse(value) as Record<number, MockProjectDetailOverrides>
+  } catch {
+    localStorage.setItem(
+      MOCK_PROJECT_DETAILS_STORAGE_KEY,
+      JSON.stringify(defaultMockProjectDetails),
+    )
+    return { ...defaultMockProjectDetails }
+  }
+}
+
+function setStoredMockProjectDetails(details: Record<number, MockProjectDetailOverrides>) {
+  localStorage.setItem(MOCK_PROJECT_DETAILS_STORAGE_KEY, JSON.stringify(details))
 }
 
 export async function getProjects(page = 0, size = 20) {
@@ -274,6 +333,7 @@ export function getMockProjectsPage(page = 0, size = 20): ProjectListResponse {
 
 export function getMockProject(projectId: number): ProjectDetail | null {
   const project = getStoredMockProjects().find((item) => item.projectId === projectId)
+  const detailOverrides = getStoredMockProjectDetails()[projectId]
 
   if (!project) {
     return null
@@ -282,15 +342,16 @@ export function getMockProject(projectId: number): ProjectDetail | null {
   return {
     projectId: project.projectId,
     name: project.name,
-    description: `${project.name}의 배포 설정과 최근 상태를 확인합니다.`,
+    description:
+      detailOverrides?.description ?? `${project.name}의 배포 설정과 최근 상태를 확인합니다.`,
     repositoryUrl: `https://github.com/example-team/${project.subdomain}.git`,
-    defaultBranch: 'main',
-    rootDirectory: '/',
+    defaultBranch: detailOverrides?.defaultBranch ?? 'main',
+    rootDirectory: detailOverrides?.rootDirectory ?? '/',
     buildType: 'DOCKERFILE',
-    healthCheckPath: '/health',
-    healthCheckPort: 8080,
-    healthCheckTimeoutSeconds: 30,
-    healthCheckIntervalSeconds: 10,
+    healthCheckPath: detailOverrides?.healthCheckPath ?? '/health',
+    healthCheckPort: detailOverrides?.healthCheckPort ?? 8080,
+    healthCheckTimeoutSeconds: detailOverrides?.healthCheckTimeoutSeconds ?? 30,
+    healthCheckIntervalSeconds: detailOverrides?.healthCheckIntervalSeconds ?? 10,
     subdomain: project.subdomain,
     webhookSecret: 'whs_****',
     status: project.status,
@@ -332,19 +393,9 @@ export function updateMockProject(
   payload: UpdateProjectRequest,
 ): ProjectDetail {
   const projects = getStoredMockProjects()
+  const detailOverrides = getStoredMockProjectDetails()
 
-  setStoredMockProjects(projects.map((item) => {
-    if (item.projectId !== project.projectId) {
-      return item
-    }
-
-    return {
-      ...item,
-      name: payload.name?.trim() || item.name,
-    }
-  }))
-
-  return {
+  const nextProject = {
     ...project,
     name: payload.name?.trim() || project.name,
     description: payload.description ?? project.description,
@@ -357,8 +408,37 @@ export function updateMockProject(
     healthCheckIntervalSeconds:
       payload.healthCheckIntervalSeconds ?? project.healthCheckIntervalSeconds,
   }
+
+  setStoredMockProjects(projects.map((item) => {
+    if (item.projectId !== project.projectId) {
+      return item
+    }
+
+    return {
+      ...item,
+      name: payload.name?.trim() || item.name,
+    }
+  }))
+
+  setStoredMockProjectDetails({
+    ...detailOverrides,
+    [project.projectId]: {
+      description: nextProject.description,
+      defaultBranch: nextProject.defaultBranch,
+      rootDirectory: nextProject.rootDirectory,
+      healthCheckPath: nextProject.healthCheckPath,
+      healthCheckPort: nextProject.healthCheckPort,
+      healthCheckTimeoutSeconds: nextProject.healthCheckTimeoutSeconds,
+      healthCheckIntervalSeconds: nextProject.healthCheckIntervalSeconds,
+    },
+  })
+
+  return nextProject
 }
 
 export function deleteMockProject(projectId: number) {
   setStoredMockProjects(getStoredMockProjects().filter((project) => project.projectId !== projectId))
+  const detailOverrides = getStoredMockProjectDetails()
+  delete detailOverrides[projectId]
+  setStoredMockProjectDetails(detailOverrides)
 }
