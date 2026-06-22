@@ -1,7 +1,22 @@
 import { apiClient } from './client'
 
 export type ProjectStatus = 'ACTIVE' | 'ARCHIVED'
-export type DeploymentStatus = 'SUCCEEDED' | 'FAILED' | 'RUNNING' | 'PENDING'
+export type DeploymentStatus =
+  | 'PENDING'
+  | 'QUEUED'
+  | 'CLONING'
+  | 'CHECKING_DOCKERFILE'
+  | 'BUILDING'
+  | 'PUSHING_IMAGE'
+  | 'DEPLOYING'
+  | 'HEALTH_CHECKING'
+  | 'SWITCHING_TRAFFIC'
+  | 'SUCCEEDED'
+  | 'FAILED'
+  | 'CANCELED'
+  | 'ROLLING_BACK'
+  | 'ROLLED_BACK'
+  | 'ROLLBACK_FAILED'
 export type RuntimeColor = 'BLUE' | 'GREEN'
 const MOCK_PROJECTS_STORAGE_KEY = 'autodeploy.mockProjects'
 
@@ -87,7 +102,7 @@ interface MockProjectDetailOverrides {
 
 export interface DeploymentRequestResponse {
   deploymentId: number
-  status: string
+  status: DeploymentStatus
   queuedAt?: string
 }
 

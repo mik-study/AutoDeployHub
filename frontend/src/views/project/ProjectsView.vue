@@ -7,9 +7,14 @@ import {
   MagnifyingGlassIcon,
   PlusIcon,
 } from '@heroicons/vue/24/outline'
-import { getMockProjectsPage, getProjects, type ProjectItem } from '../../api/projects'
+import {
+  getMockProjectsPage,
+  getProjects,
+  type DeploymentStatus,
+  type ProjectItem,
+} from '../../api/projects'
 
-type ProjectDisplayStatus = 'RUNNING' | 'PENDING' | 'FAILED'
+type ProjectDisplayStatus = 'RUNNING' | 'PENDING' | 'FAILED' | 'INACTIVE'
 
 const PROJECTS_PAGE_SIZE = 5
 const route = useRoute()
@@ -114,16 +119,50 @@ function formatRelativeDeploy(project: ProjectItem) {
   return `(${Math.floor(diffHours / 24)}일 전)`
 }
 
+function isPendingDeploymentStatus(status: DeploymentStatus) {
+  return [
+    'PENDING',
+    'QUEUED',
+    'CLONING',
+    'CHECKING_DOCKERFILE',
+    'BUILDING',
+    'PUSHING_IMAGE',
+    'DEPLOYING',
+    'HEALTH_CHECKING',
+    'SWITCHING_TRAFFIC',
+    'ROLLING_BACK',
+  ].includes(status)
+}
+
 function getProjectDisplayStatus(project: ProjectItem): ProjectDisplayStatus {
-  if (project.lastDeployment?.status === 'FAILED') {
-    return 'FAILED'
+  if (project.status !== 'ACTIVE') {
+    return 'INACTIVE'
   }
 
-  if (project.lastDeployment?.status === 'SUCCEEDED' || project.lastDeployment?.status === 'RUNNING') {
+  if (!project.lastDeployment) {
     return 'RUNNING'
   }
 
-  return 'PENDING'
+  if (
+    project.lastDeployment.status === 'FAILED' ||
+    project.lastDeployment.status === 'ROLLBACK_FAILED'
+  ) {
+    return 'FAILED'
+  }
+
+  if (isPendingDeploymentStatus(project.lastDeployment.status)) {
+    return 'PENDING'
+  }
+
+  if (
+    project.lastDeployment.status === 'SUCCEEDED' ||
+    project.lastDeployment.status === 'ROLLED_BACK' ||
+    project.lastDeployment.status === 'CANCELED'
+  ) {
+    return 'RUNNING'
+  }
+
+  return 'INACTIVE'
 }
 
 function getStatusClass(project: ProjectItem) {
