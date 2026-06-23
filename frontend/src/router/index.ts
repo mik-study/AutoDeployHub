@@ -7,6 +7,7 @@ import NotificationSettingsView from '../views/management/NotificationSettingsVi
 import UserManagementView from '../views/management/UserManagementView.vue'
 import UserSettingsView from '../views/management/UserSettingsView.vue'
 import ProjectCreateView from '../views/project/ProjectCreateView.vue'
+import ProjectDetailDeploymentsTab from '../views/project-detail/ProjectDetailDeploymentsTab.vue'
 import ProjectsView from '../views/project/ProjectsView.vue'
 import ProjectDetailView from '../views/project-detail/ProjectDetailView.vue'
 import ProjectDetailOverviewTab from '../views/project-detail/ProjectDetailOverviewTab.vue'
@@ -70,11 +71,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'deployments',
         name: 'project-detail-deployments',
-        component: ProjectDetailPlaceholderTab,
-        props: {
-          title: '배포 이력',
-          description: '배포 이력 탭 화면은 다음 단계에서 실제 배포 목록과 상태 흐름을 표시하도록 확장할 예정입니다.',
-        },
+        component: ProjectDetailDeploymentsTab,
       },
       {
         path: 'environment',

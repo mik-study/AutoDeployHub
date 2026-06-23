@@ -242,7 +242,7 @@ input {
 
 .content {
   min-width: 0;
-  padding: 34px 44px 26px;
+  padding: 30px 40px 25px;
 }
 
 .screen {
@@ -316,8 +316,8 @@ input {
 }
 
 .search-field input {
-  height: 56px;
-  padding-left: 58px;
+  height: 50px;
+  padding-left: 60px;
   border-radius: 10px;
   color: #1b2a52;
   font-size: 16px;
@@ -443,10 +443,6 @@ input {
   margin: 0;
   font-size: 24px;
   line-height: 1.25;
-}
-
-.project-detail-screen {
-  max-width: 1360px;
 }
 
 .back-button {
@@ -650,6 +646,185 @@ input {
   color: #52648f;
   font-size: 15px;
   line-height: 1.7;
+}
+
+.deployment-history-panel {
+  padding: 0;
+  overflow: hidden;
+}
+
+.deployment-history-toolbar {
+  padding: 18px 20px;
+  border-bottom: 1px solid #e6ebf4;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.deployment-history-filters,
+.deployment-history-search {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.deployment-filter-field {
+  min-height: 46px;
+  padding: 0 14px;
+  border: 1px solid #dbe3f0;
+  border-radius: 8px;
+  background: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.deployment-filter-icon {
+  width: 18px;
+  height: 18px;
+  color: #52648f;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.deployment-filter-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.deployment-filter-field select,
+.deployment-filter-field input,
+.deployment-page-size select {
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 700;
+  outline: none;
+}
+
+.deployment-filter-field select {
+  min-width: 210px;
+  cursor: pointer;
+}
+
+.deployment-date-range {
+  min-width: 350px;
+}
+
+.deployment-date-range input {
+  min-width: 132px;
+}
+
+.deployment-range-divider {
+  color: #52648f;
+  font-weight: 800;
+}
+
+.deployment-search-field {
+  min-width: 420px;
+}
+
+.icon-button {
+  width: 46px;
+  min-width: 46px;
+  height: 46px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-button svg {
+  width: 20px;
+  height: 20px;
+}
+
+.deployment-history-table th,
+.deployment-history-table td {
+  padding: 20px 24px;
+}
+
+.deployment-history-table th:first-child,
+.deployment-history-table td:first-child {
+  width: 15%;
+}
+
+.deployment-history-table th:nth-child(2),
+.deployment-history-table td:nth-child(2) {
+  width: 15%;
+}
+
+.deployment-history-table th:nth-child(3),
+.deployment-history-table td:nth-child(3) {
+  width: 20%;
+}
+
+.deployment-history-table th:nth-child(4),
+.deployment-history-table td:nth-child(4) {
+  width: 20%;
+}
+
+.deployment-history-table th:nth-child(5),
+.deployment-history-table td:nth-child(5) {
+  width: 15%;
+}
+
+.deployment-history-table th:nth-child(6),
+.deployment-history-table td:nth-child(6) {
+  width: 15%;
+}
+
+.deployment-history-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 800;
+}
+
+.deployment-history-status svg {
+  width: 18px;
+  height: 18px;
+}
+
+.deployment-history-status.success {
+  color: #16a34a;
+}
+
+.deployment-history-status.failed {
+  color: #ef4444;
+}
+
+.deployment-history-status.pending {
+  color: #f97316;
+}
+
+.deployment-history-status.inactive {
+  color: #52648f;
+}
+
+.failed-deployment-row td,
+.failed-deployment-row strong {
+  color: #ff2e2e;
+}
+
+.failed-deployment-row .deployment-history-status.failed,
+.failed-deployment-row .deployment-history-status.failed svg {
+  color: #ff2e2e;
+}
+
+.deployment-history-footer {
+  padding: 0px 20px 20px;
+  border-top: 1px solid #e6ebf4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
 }
 
 .detail-list {
@@ -1093,7 +1268,7 @@ input {
 
 .data-table th,
 .data-table td {
-  padding: 22px 28px;
+  padding: 14px 28px;
   border-top: 1px solid #e6ebf4;
   text-align: left;
   vertical-align: middle;
@@ -1118,7 +1293,7 @@ input {
 }
 
 .project-table td {
-  height: 96px;
+  height: 110px;
 }
 
 .project-table th,
@@ -1234,7 +1409,7 @@ input {
 }
 
 .pagination {
-  margin-top: 22px;
+  margin-top: 20px;
   display: flex;
   justify-content: center;
   gap: 12px;

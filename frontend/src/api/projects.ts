@@ -106,6 +106,17 @@ export interface DeploymentRequestResponse {
   queuedAt?: string
 }
 
+export interface DeploymentSummary {
+  deploymentId: number
+  branch: string | null
+  commitHash: string | null
+  commitMessage: string | null
+  status: DeploymentStatus
+  triggerType: 'MANUAL' | 'WEBHOOK' | 'ROLLBACK' | string
+  startedAt: string | null
+  finishedAt: string | null
+}
+
 export interface PageInfo {
   page: number
   size: number
@@ -115,6 +126,11 @@ export interface PageInfo {
 
 interface ProjectListResponse {
   data: ProjectItem[]
+  page: PageInfo
+}
+
+interface DeploymentListResponse {
+  data: DeploymentSummary[]
   page: PageInfo
 }
 
@@ -229,6 +245,23 @@ const defaultMockProjectDetails: Record<number, MockProjectDetailOverrides> = {
   },
 }
 
+const defaultMockProjectDeployments: Record<number, DeploymentSummary[]> = {
+  1: [
+    { deploymentId: 14, branch: '/release', commitHash: '6a8be91', commitMessage: 'release: v1.2.3', status: 'SUCCEEDED', triggerType: 'WEBHOOK', startedAt: '2026-06-22T14:25:10', finishedAt: '2026-06-22T14:27:28' },
+    { deploymentId: 13, branch: '/release', commitHash: '0db4311', commitMessage: 'release: v1.2.2', status: 'SUCCEEDED', triggerType: 'MANUAL', startedAt: '2026-06-20T14:30:22', finishedAt: '2026-06-20T14:32:40' },
+    { deploymentId: 12, branch: '/release', commitHash: '89ccd25', commitMessage: 'release: v1.2.1', status: 'SUCCEEDED', triggerType: 'MANUAL', startedAt: '2026-06-19T10:12:01', finishedAt: '2026-06-19T10:13:57' },
+    { deploymentId: 11, branch: '/release', commitHash: 'a03ce71', commitMessage: 'release: v1.2.0', status: 'SUCCEEDED', triggerType: 'WEBHOOK', startedAt: '2026-06-18T09:05:33', finishedAt: '2026-06-18T09:07:40' },
+    { deploymentId: 10, branch: '/release', commitHash: 'b8fe113', commitMessage: 'release: v1.1.9', status: 'FAILED', triggerType: 'MANUAL', startedAt: '2026-06-15T16:44:11', finishedAt: '2026-06-15T16:45:23' },
+    { deploymentId: 9, branch: '/release', commitHash: '0d24c82', commitMessage: 'release: v1.1.9 retry', status: 'SUCCEEDED', triggerType: 'MANUAL', startedAt: '2026-06-10T16:41:02', finishedAt: '2026-06-10T16:42:50' },
+    { deploymentId: 8, branch: '/release', commitHash: '3cc9fab', commitMessage: 'release: v1.1.8', status: 'SUCCEEDED', triggerType: 'WEBHOOK', startedAt: '2026-06-09T11:22:18', finishedAt: '2026-06-09T11:23:51' },
+    { deploymentId: 7, branch: '/release', commitHash: '30fa42a', commitMessage: 'release: v1.1.7', status: 'SUCCEEDED', triggerType: 'WEBHOOK', startedAt: '2026-06-08T15:10:54', finishedAt: '2026-06-08T15:12:35' },
+    { deploymentId: 6, branch: '/release', commitHash: 'c18bd23', commitMessage: 'release: v1.1.6', status: 'SUCCEEDED', triggerType: 'MANUAL', startedAt: '2026-06-07T10:03:11', finishedAt: '2026-06-07T10:04:19' },
+    { deploymentId: 5, branch: '/release', commitHash: '0f5b612', commitMessage: 'release: v1.1.5', status: 'SUCCEEDED', triggerType: 'MANUAL', startedAt: '2026-06-06T09:12:43', finishedAt: '2026-06-06T09:13:42' },
+    { deploymentId: 4, branch: '/release', commitHash: '9bc2230', commitMessage: 'release: v1.1.4', status: 'QUEUED', triggerType: 'MANUAL', startedAt: '2026-06-05T18:20:00', finishedAt: null },
+    { deploymentId: 3, branch: '/release', commitHash: '722ca12', commitMessage: 'release: v1.1.3', status: 'CANCELED', triggerType: 'MANUAL', startedAt: '2026-06-04T13:20:42', finishedAt: '2026-06-04T13:21:14' },
+  ],
+}
+
 const MOCK_PROJECT_DETAILS_STORAGE_KEY = 'autodeploy.mockProjectDetails'
 
 function createMinutesAgo(minutes: number) {
@@ -329,6 +362,17 @@ export async function requestDeployment(projectId: number) {
   )
 
   return response.data.data
+}
+
+export async function getProjectDeployments(projectId: number, page = 0, size = 100) {
+  const response = await apiClient.get<DeploymentListResponse>(`/projects/${projectId}/deployments`, {
+    params: {
+      page,
+      size,
+    },
+  })
+
+  return response.data
 }
 
 export function getMockProjectsPage(page = 0, size = 20): ProjectListResponse {
@@ -449,6 +493,10 @@ export function updateMockProject(
   })
 
   return nextProject
+}
+
+export function getMockProjectDeployments(projectId: number) {
+  return [...(defaultMockProjectDeployments[projectId] ?? [])]
 }
 
 export function deleteMockProject(projectId: number) {
