@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { CheckCircleIcon } from '@heroicons/vue/24/outline'
-import { useProjectDetailContext } from './projectDetailContext'
+import { useProjectDetailContext } from '../projectDetailContext'
 
 const { project, statusLabel, formatDate } = useProjectDetailContext()
 </script>

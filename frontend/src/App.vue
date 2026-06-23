@@ -11,6 +11,7 @@ import {
   UserGroupIcon,
 } from '@heroicons/vue/24/outline'
 import { useAuthStore } from './stores/auth'
+import { resetMockProjectData } from './api/projects'
 import logoIconImage from './assets/images/autodeployhub-logo-icon.png'
 
 const route = useRoute()
@@ -18,12 +19,22 @@ const router = useRouter()
 const authStore = useAuthStore()
 const isAuthLayout = computed(() => route.meta.layout === 'auth')
 const isProjectsActive = computed(() => route.path.startsWith('/projects'))
+const isDevelopment = import.meta.env.DEV
 const currentUser = computed(() => {
   return authStore.user ?? {
     name: 'user',
     email: '',
   }
 })
+
+function handleResetTestData() {
+  if (!window.confirm('테스트 데이터를 초기화하시겠습니까?')) {
+    return
+  }
+
+  resetMockProjectData()
+  window.location.reload()
+}
 
 async function handleLogout() {
   if (!window.confirm('로그아웃하시겠습니까?')) {
@@ -73,6 +84,12 @@ async function handleLogout() {
           설정
         </RouterLink>
       </nav>
+
+      <div v-if="isDevelopment" class="sidebar-dev-tools">
+        <button class="sidebar-dev-button" type="button" @click="handleResetTestData">
+          테스트 데이터 초기화
+        </button>
+      </div>
 
       <div class="sidebar-user">
         <div class="avatar">

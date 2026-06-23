@@ -7,11 +7,11 @@ import NotificationSettingsView from '../views/management/NotificationSettingsVi
 import UserManagementView from '../views/management/UserManagementView.vue'
 import UserSettingsView from '../views/management/UserSettingsView.vue'
 import ProjectCreateView from '../views/project/ProjectCreateView.vue'
-import ProjectDetailDeploymentsTab from '../views/project-detail/ProjectDetailDeploymentsTab.vue'
+import ProjectDetailDeploymentsTab from '../views/project-detail/tabs/ProjectDetailDeploymentsTab.vue'
 import ProjectsView from '../views/project/ProjectsView.vue'
 import ProjectDetailView from '../views/project-detail/ProjectDetailView.vue'
-import ProjectDetailOverviewTab from '../views/project-detail/ProjectDetailOverviewTab.vue'
-import ProjectDetailPlaceholderTab from '../views/project-detail/ProjectDetailPlaceholderTab.vue'
+import ProjectDetailOverviewTab from '../views/project-detail/tabs/ProjectDetailOverviewTab.vue'
+import ProjectDetailPlaceholderTab from '../views/project-detail/tabs/ProjectDetailPlaceholderTab.vue'
 
 const routes: RouteRecordRaw[] = [
   {

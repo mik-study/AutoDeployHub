@@ -176,12 +176,34 @@ input {
 }
 
 .sidebar-user {
-  margin-top: auto;
+  margin-top: 14px;
   padding-top: 28px;
   border-top: 1px solid var(--sidebar-line);
   display: flex;
   align-items: center;
   gap: 14px;
+}
+
+.sidebar-dev-tools {
+  margin-top: auto;
+  padding-top: 24px;
+}
+
+.sidebar-dev-button {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.sidebar-dev-button:hover {
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .avatar {
@@ -1282,7 +1304,7 @@ input {
 
 .modal-panel {
   width: min(760px, 100%);
-  max-height: min(820px, calc(100vh - 48px));
+  max-height: min(840px, calc(100vh - 48px));
   padding: 30px;
   overflow-y: auto;
 }
@@ -1915,6 +1937,10 @@ input {
   }
 
   .sidebar-user {
+    display: none;
+  }
+
+  .sidebar-dev-tools {
     display: none;
   }
 

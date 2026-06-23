@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import type { UpdateProjectRequest } from '../../api/projects'
+import type { UpdateProjectRequest } from '../../../api/projects'
 
 const props = defineProps<{
   initialValue: UpdateProjectRequest

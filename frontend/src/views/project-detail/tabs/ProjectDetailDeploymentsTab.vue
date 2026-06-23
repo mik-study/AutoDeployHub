@@ -12,7 +12,7 @@ import {
   XCircleIcon,
   ClockIcon,
 } from '@heroicons/vue/24/outline'
-import DeploymentDetailModal from './DeploymentDetailModal.vue'
+import DeploymentDetailModal from '../modals/DeploymentDetailModal.vue'
 import {
   cancelDeployment,
   cancelMockDeployment,
@@ -23,7 +23,7 @@ import {
   type DeploymentDetail,
   type DeploymentStatus,
   type DeploymentSummary,
-} from '../../api/projects'
+} from '../../../api/projects'
 
 type DeploymentFilterStatus = 'ALL' | DeploymentStatus
 

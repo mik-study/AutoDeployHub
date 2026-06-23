@@ -4,7 +4,7 @@ import {
   ClockIcon,
   XCircleIcon,
 } from '@heroicons/vue/24/outline'
-import type { DeploymentDetail, DeploymentStatus } from '../../api/projects'
+import type { DeploymentDetail, DeploymentStatus } from '../../../api/projects'
 
 const props = defineProps<{
   deployment: DeploymentDetail | null

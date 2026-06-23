@@ -20,7 +20,7 @@ import {
   type ProjectDetail,
   type UpdateProjectRequest,
 } from '../../api/projects'
-import ProjectEditModal from './ProjectEditModal.vue'
+import ProjectEditModal from './modals/ProjectEditModal.vue'
 import { projectDetailContextKey } from './projectDetailContext'
 
 const props = defineProps<{

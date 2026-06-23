@@ -609,3 +609,9 @@ export function deleteMockProject(projectId: number) {
   delete deployments[projectId]
   setStoredMockProjectDeployments(deployments)
 }
+
+export function resetMockProjectData() {
+  localStorage.removeItem(MOCK_PROJECTS_STORAGE_KEY)
+  localStorage.removeItem(MOCK_PROJECT_DETAILS_STORAGE_KEY)
+  localStorage.removeItem(MOCK_PROJECT_DEPLOYMENTS_STORAGE_KEY)
+}
