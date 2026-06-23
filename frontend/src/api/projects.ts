@@ -117,6 +117,15 @@ export interface DeploymentSummary {
   finishedAt: string | null
 }
 
+export interface DeploymentDetail extends DeploymentSummary {
+  projectId?: number
+  previousDeploymentId?: number | null
+  imageRepository?: string | null
+  imageTag?: string | null
+  failureReason?: string | null
+  createdAt?: string | null
+}
+
 export interface PageInfo {
   page: number
   size: number
@@ -263,6 +272,7 @@ const defaultMockProjectDeployments: Record<number, DeploymentSummary[]> = {
 }
 
 const MOCK_PROJECT_DETAILS_STORAGE_KEY = 'autodeploy.mockProjectDetails'
+const MOCK_PROJECT_DEPLOYMENTS_STORAGE_KEY = 'autodeploy.mockProjectDeployments'
 
 function createMinutesAgo(minutes: number) {
   return new Date(Date.now() - minutes * 60 * 1000).toISOString()
@@ -323,6 +333,32 @@ function setStoredMockProjectDetails(details: Record<number, MockProjectDetailOv
   localStorage.setItem(MOCK_PROJECT_DETAILS_STORAGE_KEY, JSON.stringify(details))
 }
 
+function getStoredMockProjectDeployments() {
+  const value = localStorage.getItem(MOCK_PROJECT_DEPLOYMENTS_STORAGE_KEY)
+
+  if (!value) {
+    localStorage.setItem(
+      MOCK_PROJECT_DEPLOYMENTS_STORAGE_KEY,
+      JSON.stringify(defaultMockProjectDeployments),
+    )
+    return structuredClone(defaultMockProjectDeployments) as Record<number, DeploymentSummary[]>
+  }
+
+  try {
+    return JSON.parse(value) as Record<number, DeploymentSummary[]>
+  } catch {
+    localStorage.setItem(
+      MOCK_PROJECT_DEPLOYMENTS_STORAGE_KEY,
+      JSON.stringify(defaultMockProjectDeployments),
+    )
+    return structuredClone(defaultMockProjectDeployments) as Record<number, DeploymentSummary[]>
+  }
+}
+
+function setStoredMockProjectDeployments(deployments: Record<number, DeploymentSummary[]>) {
+  localStorage.setItem(MOCK_PROJECT_DEPLOYMENTS_STORAGE_KEY, JSON.stringify(deployments))
+}
+
 export async function getProjects(page = 0, size = 20) {
   const response = await apiClient.get<ProjectListResponse>('/projects', {
     params: {
@@ -373,6 +409,20 @@ export async function getProjectDeployments(projectId: number, page = 0, size = 
   })
 
   return response.data
+}
+
+export async function cancelDeployment(deploymentId: number) {
+  const response = await apiClient.post<{ data: DeploymentDetail }>(
+    `/deployments/${deploymentId}/cancel`,
+  )
+
+  return response.data.data
+}
+
+export async function getDeploymentDetail(deploymentId: number) {
+  const response = await apiClient.get<{ data: DeploymentDetail }>(`/deployments/${deploymentId}`)
+
+  return response.data.data
 }
 
 export function getMockProjectsPage(page = 0, size = 20): ProjectListResponse {
@@ -496,7 +546,58 @@ export function updateMockProject(
 }
 
 export function getMockProjectDeployments(projectId: number) {
-  return [...(defaultMockProjectDeployments[projectId] ?? [])]
+  return [...(getStoredMockProjectDeployments()[projectId] ?? [])]
+}
+
+export function cancelMockDeployment(projectId: number, deploymentId: number) {
+  const deployments = getStoredMockProjectDeployments()
+  const projectDeployments = deployments[projectId] ?? []
+  const target = projectDeployments.find((item) => item.deploymentId === deploymentId)
+
+  if (!target) {
+    throw new Error('Mock deployment not found')
+  }
+
+  if (target.status !== 'PENDING' && target.status !== 'QUEUED') {
+    throw new Error('Deployment is not cancelable')
+  }
+
+  const finishedAt = new Date().toISOString()
+  const nextDeployment: DeploymentSummary = {
+    ...target,
+    status: 'CANCELED',
+    finishedAt,
+  }
+
+  deployments[projectId] = projectDeployments.map((item) =>
+    item.deploymentId === deploymentId ? nextDeployment : item,
+  )
+  setStoredMockProjectDeployments(deployments)
+
+  return nextDeployment
+}
+
+export function getMockDeploymentDetail(projectId: number, deploymentId: number): DeploymentDetail | null {
+  const deployment = (getStoredMockProjectDeployments()[projectId] ?? []).find(
+    (item) => item.deploymentId === deploymentId,
+  )
+
+  if (!deployment) {
+    return null
+  }
+
+  return {
+    ...deployment,
+    projectId,
+    previousDeploymentId: deployment.deploymentId > 1 ? deployment.deploymentId - 1 : null,
+    imageRepository: 'ghcr.io/example-team/autodeployhub',
+    imageTag: deployment.commitHash ? `sha-${deployment.commitHash}` : null,
+    failureReason:
+      deployment.status === 'FAILED' || deployment.status === 'ROLLBACK_FAILED'
+        ? '헬스 체크 실패로 배포가 중단되었습니다.'
+        : null,
+    createdAt: deployment.startedAt,
+  }
 }
 
 export function deleteMockProject(projectId: number) {
@@ -504,4 +605,7 @@ export function deleteMockProject(projectId: number) {
   const detailOverrides = getStoredMockProjectDetails()
   delete detailOverrides[projectId]
   setStoredMockProjectDetails(detailOverrides)
+  const deployments = getStoredMockProjectDeployments()
+  delete deployments[projectId]
+  setStoredMockProjectDeployments(deployments)
 }

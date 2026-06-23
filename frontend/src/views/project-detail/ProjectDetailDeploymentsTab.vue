@@ -12,9 +12,15 @@ import {
   XCircleIcon,
   ClockIcon,
 } from '@heroicons/vue/24/outline'
+import DeploymentDetailModal from './DeploymentDetailModal.vue'
 import {
+  cancelDeployment,
+  cancelMockDeployment,
+  getDeploymentDetail,
+  getMockDeploymentDetail,
   getMockProjectDeployments,
   getProjectDeployments,
+  type DeploymentDetail,
   type DeploymentStatus,
   type DeploymentSummary,
 } from '../../api/projects'
@@ -35,6 +41,11 @@ const dateFrom = ref(formatDateInput(oneWeekAgo))
 const dateTo = ref(formatDateInput(today))
 const searchKeyword = ref('')
 const currentPage = ref(0)
+const cancellingDeploymentIds = ref<number[]>([])
+const selectedDeployment = ref<DeploymentDetail | null>(null)
+const isDetailModalOpen = ref(false)
+const isDetailLoading = ref(false)
+const detailErrorMessage = ref('')
 
 const projectId = computed(() => Number(route.params.projectId))
 
@@ -103,6 +114,81 @@ async function loadDeployments() {
   }
 }
 
+function isCancelableStatus(status: DeploymentStatus) {
+  return status === 'PENDING' || status === 'QUEUED'
+}
+
+function isCancelling(deploymentId: number) {
+  return cancellingDeploymentIds.value.includes(deploymentId)
+}
+
+async function handleCancelDeployment(deployment: DeploymentSummary) {
+  if (!isCancelableStatus(deployment.status) || isCancelling(deployment.deploymentId)) {
+    return
+  }
+
+  const confirmed = window.confirm(`#${deployment.deploymentId} 배포를 취소하시겠습니까?`)
+
+  if (!confirmed) {
+    return
+  }
+
+  cancellingDeploymentIds.value = [...cancellingDeploymentIds.value, deployment.deploymentId]
+  errorMessage.value = ''
+
+  try {
+    await cancelDeployment(deployment.deploymentId)
+  } catch {
+    if (import.meta.env.DEV) {
+      try {
+        cancelMockDeployment(projectId.value, deployment.deploymentId)
+      } catch {
+        errorMessage.value = '배포 취소에 실패했습니다.'
+        return
+      }
+    } else {
+      errorMessage.value = '배포 취소에 실패했습니다.'
+      return
+    }
+  } finally {
+    cancellingDeploymentIds.value = cancellingDeploymentIds.value.filter(
+      (id) => id !== deployment.deploymentId,
+    )
+  }
+
+  await loadDeployments()
+}
+
+async function openDeploymentDetail(deploymentId: number) {
+  isDetailModalOpen.value = true
+  isDetailLoading.value = true
+  detailErrorMessage.value = ''
+  selectedDeployment.value = null
+
+  try {
+    selectedDeployment.value = await getDeploymentDetail(deploymentId)
+  } catch {
+    if (import.meta.env.DEV) {
+      selectedDeployment.value = getMockDeploymentDetail(projectId.value, deploymentId)
+
+      if (!selectedDeployment.value) {
+        detailErrorMessage.value = '배포 상세 정보를 불러오지 못했습니다.'
+      }
+    } else {
+      detailErrorMessage.value = '배포 상세 정보를 불러오지 못했습니다.'
+    }
+  } finally {
+    isDetailLoading.value = false
+  }
+}
+
+function closeDeploymentDetail() {
+  isDetailModalOpen.value = false
+  isDetailLoading.value = false
+  detailErrorMessage.value = ''
+  selectedDeployment.value = null
+}
+
 function formatStartedAt(value: string | null) {
   if (!value) {
     return '-'
@@ -157,14 +243,29 @@ function formatDuration(startedAt: string | null, finishedAt: string | null) {
     return '-'
   }
 
-  const minutes = Math.floor(seconds / 60)
+  const days = Math.floor(seconds / 86400)
+  const hours = Math.floor((seconds % 86400) / 3600)
+  const minutes = Math.floor((seconds % 3600) / 60)
   const remainSeconds = seconds % 60
+  const parts: string[] = []
 
-  if (minutes === 0) {
-    return `${remainSeconds}초`
+  if (days > 0) {
+    parts.push(`${days}일`)
   }
 
-  return `${minutes}분 ${remainSeconds.toString().padStart(2, '0')}초`
+  if (hours > 0) {
+    parts.push(`${hours}시간`)
+  }
+
+  if (minutes > 0) {
+    parts.push(`${minutes}분`)
+  }
+
+  if (remainSeconds > 0 || parts.length === 0) {
+    parts.push(`${remainSeconds}초`)
+  }
+
+  return parts.join(' ')
 }
 
 function getStatusLabel(status: DeploymentStatus) {
@@ -306,22 +407,25 @@ watch(projectId, () => {
           <th>종료 시간</th>
           <th>소요 시간</th>
           <th>트리거</th>
+          <th>작업</th>
         </tr>
       </thead>
       <tbody>
         <tr v-if="isLoading">
-          <td colspan="6" class="table-message">배포 이력을 불러오는 중입니다.</td>
+          <td colspan="7" class="table-message">배포 이력을 불러오는 중입니다.</td>
         </tr>
         <tr v-else-if="errorMessage">
-          <td colspan="6" class="table-message error">{{ errorMessage }}</td>
+          <td colspan="7" class="table-message error">{{ errorMessage }}</td>
         </tr>
         <tr v-else-if="pagedDeployments.length === 0">
-          <td colspan="6" class="table-message">표시할 배포 이력이 없습니다.</td>
+          <td colspan="7" class="table-message">표시할 배포 이력이 없습니다.</td>
         </tr>
         <tr
           v-for="deployment in pagedDeployments"
           :key="deployment.deploymentId"
           :class="{ 'failed-deployment-row': getStatusClass(deployment.status) === 'failed' }"
+          class="deployment-history-row"
+          @click="openDeploymentDetail(deployment.deploymentId)"
         >
           <td>
             <strong>#{{ deployment.deploymentId }}</strong>
@@ -339,6 +443,18 @@ watch(projectId, () => {
           <td>{{ formatFinishedAt(deployment.finishedAt) }}</td>
           <td>{{ formatDuration(deployment.startedAt, deployment.finishedAt) }}</td>
           <td>{{ getTriggerTypeLabel(deployment.triggerType) }}</td>
+          <td>
+            <button
+              v-if="isCancelableStatus(deployment.status)"
+              class="secondary-button deployment-cancel-button"
+              type="button"
+              :disabled="isCancelling(deployment.deploymentId)"
+              @click.stop="handleCancelDeployment(deployment)"
+            >
+              {{ isCancelling(deployment.deploymentId) ? '취소 중...' : '취소' }}
+            </button>
+            <span v-else class="deployment-action-placeholder">-</span>
+          </td>
         </tr>
       </tbody>
     </table>
@@ -372,5 +488,13 @@ watch(projectId, () => {
         </button>
       </nav>
     </div>
+
+    <DeploymentDetailModal
+      v-if="isDetailModalOpen"
+      :deployment="selectedDeployment"
+      :is-loading="isDetailLoading"
+      :error-message="detailErrorMessage"
+      @close="closeDeploymentDetail"
+    />
   </section>
 </template>
