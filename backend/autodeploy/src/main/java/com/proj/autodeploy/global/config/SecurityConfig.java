@@ -53,7 +53,8 @@ public class SecurityConfig {
         config.setAllowedOrigins(List.of(
                 "http://localhost:5173",
                 "http://localhost:3000",
-                "http://dashboard.autodeploy.test"
+                "http://dashboard.autodeploy.test",
+                "http://dashboard.autodeploy.test:8081"
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
