@@ -10,4 +10,7 @@ public interface RuntimeInstanceRepository extends JpaRepository<RuntimeInstance
     List<RuntimeInstance> findByProjectId(Long projectId);
 
     Optional<RuntimeInstance> findByProjectIdAndActiveTrue(Long projectId);
+
+    /** 한 배포가 띄운 인스턴스. 4주차는 배포당 BLUE 하나라 단건이다. (과제 3 실패 처리) */
+    Optional<RuntimeInstance> findByDeploymentId(Long deploymentId);
 }

@@ -112,4 +112,20 @@ public class Deployment {
     public void markFailureReason(String reason) {
         this.failureReason = reason;
     }
+
+    /**
+     * 빌드된 이미지 좌표 기록. (과제 3 Worker)
+     *
+     * <p>레지스트리가 없는 4주차에는 로컬 이미지 이름/태그가 그대로 들어간다.
+     * 나중에 registry 를 붙이면 repository 에 registry 호스트가 앞에 붙는 형태가 된다.
+     */
+    public void assignImage(String imageRepository, String imageTag) {
+        this.imageRepository = imageRepository;
+        this.imageTag = imageTag;
+    }
+
+    /** 수동 배포처럼 commitHash 없이 시작한 배포에, clone 후 확인한 실제 커밋을 채운다. */
+    public void resolveCommit(String commitHash) {
+        this.commitHash = commitHash;
+    }
 }

@@ -6,13 +6,14 @@ import com.proj.autodeploy.deployment.domain.DeploymentTriggerType;
 import com.proj.autodeploy.deployment.dto.CreateDeploymentRequest;
 import com.proj.autodeploy.deployment.dto.DeploymentDetailResponse;
 import com.proj.autodeploy.deployment.dto.DeploymentSummaryResponse;
+import com.proj.autodeploy.deployment.lock.DeploymentLockManager;
+import com.proj.autodeploy.deployment.messaging.DeploymentRequested;
 import com.proj.autodeploy.global.error.ApiException;
 import com.proj.autodeploy.global.error.ErrorCode;
 import com.proj.autodeploy.project.ProjectService;
 import com.proj.autodeploy.project.domain.Project;
-import java.util.Arrays;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -22,27 +23,17 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class DeploymentService {
 
-    /** 중복 배포 가드용 "진행 중" 상태 집합 (DeploymentStatus.isInProgress() 기준, 한 곳에서 산출). */
-    private static final List<DeploymentStatus> IN_PROGRESS_STATUSES =
-            Arrays.stream(DeploymentStatus.values())
-                    .filter(DeploymentStatus::isInProgress)
-                    .toList();
-
     private final DeploymentRepository deploymentRepository;
     private final ProjectService projectService;
-    private final DeploymentPublisher deploymentPublisher;
+    private final ApplicationEventPublisher eventPublisher;
+    private final DeploymentLockManager lockManager;
 
     /**
-     * 배포 요청. (05_api_spec.md §4.1) PENDING → QUEUED 후 발행 seam 호출.
+     * 배포 요청. (05_api_spec.md §4.1) PENDING → QUEUED 후 발행 이벤트 등록.
      */
     @Transactional
     public DeploymentDetailResponse create(Long userId, Long projectId, CreateDeploymentRequest request) {
         Project project = projectService.getOwnedProject(userId, projectId);
-
-        // 중복 배포 가드. TODO(과제 5): Redis 분산락으로 교체
-        if (deploymentRepository.existsByProjectIdAndStatusIn(projectId, IN_PROGRESS_STATUSES)) {
-            throw new ApiException(ErrorCode.DEPLOYMENT_ALREADY_IN_PROGRESS);
-        }
 
         String branch = (request.branch() != null && !request.branch().isBlank())
                 ? request.branch().trim()
@@ -55,10 +46,25 @@ public class DeploymentService {
                 .triggerType(DeploymentTriggerType.MANUAL)
                 .build();                              // status = PENDING
         deployment.transitionTo(DeploymentStatus.QUEUED);
-        deployment = deploymentRepository.save(deployment);
+        deployment = deploymentRepository.save(deployment);   // IDENTITY 라 여기서 id 가 채워진다
 
-        // TODO(과제 2): 트랜잭션 커밋 후 발행(@TransactionalEventListener)으로 다듬기. 현재는 로그 스텁.
-        deploymentPublisher.publish(deployment);
+        // 중복 배포 가드 (과제 5): 프로젝트 단위 분산락. 획득 실패 = 이미 진행 중인 배포가 있다.
+        // 락 값이 deploymentId 라서 저장 이후에 잡는다.
+        if (!lockManager.tryLock(projectId, deployment.getId())) {
+            // 거절된 요청이 이력에 남지 않도록 직접 지운다. 롤백에만 맡기면, 호출부가 이미 트랜잭션
+            // 안일 때(내부 @Transactional 이 참여만 하는 경우) row 가 그대로 남는다.
+            deploymentRepository.delete(deployment);
+            deploymentRepository.flush();
+            throw new ApiException(ErrorCode.DEPLOYMENT_ALREADY_IN_PROGRESS);
+        }
+
+        // 큐 발행은 커밋 이후에 일어난다. (DeploymentEventListener 가 AFTER_COMMIT 에서 수신)
+        // 커밋 전에 보내면 컨슈머가 아직 없는 row 를 조회해 배포가 증발할 수 있다.
+        eventPublisher.publishEvent(new DeploymentRequested(
+                deployment.getId(),
+                projectId,
+                branch,
+                deployment.getCommitHash()));
 
         return DeploymentDetailResponse.from(deployment);
     }
@@ -87,6 +93,8 @@ public class DeploymentService {
             throw new ApiException(ErrorCode.DEPLOYMENT_NOT_CANCELABLE);
         }
         deployment.transitionTo(DeploymentStatus.CANCELED);
+        // 종착 도달 → 락 해제. 안 풀면 TTL(기본 30분) 동안 그 프로젝트가 배포 불가로 묶인다.
+        lockManager.unlock(deployment.getProjectId(), deployment.getId());
         return DeploymentDetailResponse.from(deployment);
     }
 

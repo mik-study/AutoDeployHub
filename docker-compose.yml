@@ -9,8 +9,10 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-autodeploy}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-rlagustn1!}
+    # 로컬에 설치된 PostgreSQL(5432)과 충돌 회피용 호스트 포트(5433).
+    # 백엔드 컨테이너는 내부 네트워크 'postgres:5432' 로 접속하므로 영향 없음.
     ports:
-      - "127.0.0.1:5432:5432"
+      - "127.0.0.1:5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -68,7 +70,7 @@ services:
     restart: unless-stopped
     command: ["sh", "-c", "npm ci && npm run dev -- --host 0.0.0.0"]
     environment:
-      VITE_API_BASE_URL: http://api.autodeploy.test/api
+      VITE_API_BASE_URL: http://api.autodeploy.test:8081/api
     volumes:
       - ./frontend:/app
       - frontend_node_modules:/app/node_modules
@@ -87,10 +89,29 @@ services:
     restart: unless-stopped
     environment:
       SPRING_DOCKER_COMPOSE_ENABLED: "false"
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-autodeploy}
+      # 도커 postgres 대신 호스트에 로컬 설치된 PostgreSQL(5432)을 바라보도록 설정.
+      # host.docker.internal 로 컨테이너에서 호스트 루프백에 접근.
+      SPRING_DATASOURCE_URL: jdbc:postgresql://host.docker.internal:5432/${POSTGRES_DB:-autodeploy}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-rlagustn1!}
-    command: ["sh", "-c", "chmod +x ./gradlew && ./gradlew bootRun --args='--server.port=8080'"]
+      # 컨테이너 내부에서는 서비스명으로 접속 (autodeploy-network 안).
+      # application.properties 의 localhost 기본값을 relaxed binding 으로 덮어쓴다.
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: "5672"
+      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_DEFAULT_USER:-autodeploy_user}
+      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS:-autodeploy_password}
+      # 배포 분산락 (과제 5). 컨테이너 내부에서는 서비스명으로 접속.
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: "6379"
+      # 환경변수 암호화 키 (과제 6). 운영에서는 반드시 외부 주입할 것.
+      ENV_ENC_KEY: ${ENV_ENC_KEY:-local-dev-env-key-32byte-change!}
+    # 의존 인프라가 준비되기 전에 백엔드가 떠서 접속 실패 로그를 뿜는 걸 막는다.
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: ["sh", "-c", "chmod +x ./gradlew && ./gradlew bootRun --project-cache-dir=/root/.gradle-project-cache --args='--server.port=8080'"]
     volumes:
       - ./backend/autodeploy:/app
       - gradle_cache:/root/.gradle
