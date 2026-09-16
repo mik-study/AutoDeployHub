@@ -12,6 +12,7 @@ import ProjectsView from '../views/project/ProjectsView.vue'
 import ProjectDetailView from '../views/project-detail/ProjectDetailView.vue'
 import ProjectDetailOverviewTab from '../views/project-detail/tabs/ProjectDetailOverviewTab.vue'
 import ProjectDetailPlaceholderTab from '../views/project-detail/tabs/ProjectDetailPlaceholderTab.vue'
+import ProjectDetailEnvironmentTab from '../views/project-detail/tabs/ProjectDetailEnvironmentTab.vue'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -76,11 +77,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'environment',
         name: 'project-detail-environment',
-        component: ProjectDetailPlaceholderTab,
-        props: {
-          title: '환경 변수',
-          description: '환경 변수 탭 화면은 프로젝트별 변수 목록, 마스킹, 수정 기능을 연결할 예정입니다.',
-        },
+        component: ProjectDetailEnvironmentTab,
       },
       {
         path: 'webhook',
