@@ -8,7 +8,6 @@ import {
   PlusIcon,
 } from '@heroicons/vue/24/outline'
 import {
-  getMockProjectsPage,
   getProjects,
   type DeploymentStatus,
   type ProjectItem,
@@ -68,15 +67,7 @@ async function loadProjects(page = 0) {
     currentPage.value = response.page.page
     totalPages.value = Math.max(response.page.totalPages, 1)
   } catch {
-    if (import.meta.env.DEV) {
-      const response = getMockProjectsPage(page, PROJECTS_PAGE_SIZE)
-
-      projects.value = response.data
-      currentPage.value = response.page.page
-      totalPages.value = response.page.totalPages
-      return
-    }
-
+    projects.value = []
     errorMessage.value = '프로젝트 목록을 불러오지 못했습니다.'
   } finally {
     isLoading.value = false

@@ -15,10 +15,7 @@ import {
 import DeploymentDetailModal from '../modals/DeploymentDetailModal.vue'
 import {
   cancelDeployment,
-  cancelMockDeployment,
   getDeploymentDetail,
-  getMockDeploymentDetail,
-  getMockProjectDeployments,
   getProjectDeployments,
   type DeploymentDetail,
   type DeploymentStatus,
@@ -103,11 +100,6 @@ async function loadDeployments() {
     const response = await getProjectDeployments(projectId.value, 0, 100)
     deployments.value = response.data
   } catch {
-    if (import.meta.env.DEV) {
-      deployments.value = getMockProjectDeployments(projectId.value)
-      return
-    }
-
     errorMessage.value = '배포 이력을 불러오지 못했습니다.'
   } finally {
     isLoading.value = false
@@ -139,17 +131,8 @@ async function handleCancelDeployment(deployment: DeploymentSummary) {
   try {
     await cancelDeployment(deployment.deploymentId)
   } catch {
-    if (import.meta.env.DEV) {
-      try {
-        cancelMockDeployment(projectId.value, deployment.deploymentId)
-      } catch {
-        errorMessage.value = '배포 취소에 실패했습니다.'
-        return
-      }
-    } else {
-      errorMessage.value = '배포 취소에 실패했습니다.'
-      return
-    }
+    errorMessage.value = '배포 취소에 실패했습니다.'
+    return
   } finally {
     cancellingDeploymentIds.value = cancellingDeploymentIds.value.filter(
       (id) => id !== deployment.deploymentId,
@@ -168,15 +151,7 @@ async function openDeploymentDetail(deploymentId: number) {
   try {
     selectedDeployment.value = await getDeploymentDetail(deploymentId)
   } catch {
-    if (import.meta.env.DEV) {
-      selectedDeployment.value = getMockDeploymentDetail(projectId.value, deploymentId)
-
-      if (!selectedDeployment.value) {
-        detailErrorMessage.value = '배포 상세 정보를 불러오지 못했습니다.'
-      }
-    } else {
-      detailErrorMessage.value = '배포 상세 정보를 불러오지 못했습니다.'
-    }
+    detailErrorMessage.value = '배포 상세 정보를 불러오지 못했습니다.'
   } finally {
     isDetailLoading.value = false
   }

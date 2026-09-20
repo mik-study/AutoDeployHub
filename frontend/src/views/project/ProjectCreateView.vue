@@ -2,7 +2,7 @@
 import { ChevronDownIcon } from '@heroicons/vue/24/outline'
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { createMockProject, createProject, type CreateProjectResponse } from '../../api/projects'
+import { createProject, type CreateProjectResponse } from '../../api/projects'
 
 const router = useRouter()
 
@@ -61,12 +61,6 @@ async function handleCreateProject() {
     const response = await createProject(payload)
     createdProject.value = response
   } catch {
-    if (import.meta.env.DEV) {
-      const response = createMockProject(buildPayload())
-      createdProject.value = response
-      return
-    }
-
     errorMessage.value = '프로젝트 생성에 실패했습니다. 입력 정보를 확인해주세요.'
   } finally {
     isSubmitting.value = false

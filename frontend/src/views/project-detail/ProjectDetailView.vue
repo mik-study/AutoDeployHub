@@ -10,12 +10,9 @@ import {
   TrashIcon,
 } from '@heroicons/vue/24/outline'
 import {
-  deleteMockProject,
   deleteProject,
-  getMockProject,
   getProject,
   requestDeployment,
-  updateMockProject,
   updateProject,
   type ProjectDetail,
   type UpdateProjectRequest,
@@ -37,6 +34,7 @@ const isDeleting = ref(false)
 const isEditModalOpen = ref(false)
 const errorMessage = ref('')
 const deployMessage = ref('')
+const deploymentRefreshKey = ref(0)
 const editForm = ref<UpdateProjectRequest>({
   name: '',
   description: '',
@@ -67,7 +65,7 @@ const tabs = [
 
 provide(projectDetailContextKey, {
   project,
-  statusLabel,
+  deploymentRefreshKey,
   formatDate,
 })
 
@@ -78,15 +76,6 @@ async function loadProject() {
   try {
     project.value = await getProject(props.projectId)
   } catch {
-    if (import.meta.env.DEV) {
-      const mockProject = getMockProject(props.projectId)
-
-      if (mockProject) {
-        project.value = mockProject
-        return
-      }
-    }
-
     errorMessage.value = '프로젝트 정보를 불러오지 못했습니다.'
   } finally {
     isLoading.value = false
@@ -105,12 +94,8 @@ async function handleDeploy() {
   try {
     const deployment = await requestDeployment(project.value.projectId)
     deployMessage.value = `배포 요청이 등록되었습니다. 상태: ${deployment.status}`
+    deploymentRefreshKey.value += 1
   } catch {
-    if (import.meta.env.DEV) {
-      deployMessage.value = '개발 모드: 배포 API가 준비되면 실제 배포 요청으로 연결됩니다.'
-      return
-    }
-
     errorMessage.value = '배포 요청에 실패했습니다.'
   } finally {
     isDeploying.value = false
@@ -170,13 +155,6 @@ async function handleUpdateProject(editForm: UpdateProjectRequest) {
     deployMessage.value = '프로젝트 정보가 수정되었습니다.'
     isEditModalOpen.value = false
   } catch {
-    if (import.meta.env.DEV) {
-      project.value = updateMockProject(project.value, payload)
-      deployMessage.value = '개발 모드: 프로젝트 정보가 수정되었습니다.'
-      isEditModalOpen.value = false
-      return
-    }
-
     errorMessage.value = '프로젝트 수정에 실패했습니다.'
   } finally {
     isSaving.value = false
@@ -199,13 +177,9 @@ async function handleDeleteProject() {
   try {
     await deleteProject(project.value.projectId)
   } catch {
-    if (import.meta.env.DEV) {
-      deleteMockProject(project.value.projectId)
-    } else {
-      errorMessage.value = '프로젝트 삭제에 실패했습니다.'
-      isDeleting.value = false
-      return
-    }
+    errorMessage.value = '프로젝트 삭제에 실패했습니다.'
+    isDeleting.value = false
+    return
   }
 
   await router.push({ name: 'projects' })

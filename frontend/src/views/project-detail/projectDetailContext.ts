@@ -1,9 +1,9 @@
-import { inject, type ComputedRef, type InjectionKey, type Ref } from 'vue'
+import { inject, type InjectionKey, type Ref } from 'vue'
 import type { ProjectDetail } from '../../api/projects'
 
 interface ProjectDetailContext {
   project: Ref<ProjectDetail | null>
-  statusLabel: ComputedRef<string>
+  deploymentRefreshKey: Ref<number>
   formatDate: (value: string) => string
 }
 
