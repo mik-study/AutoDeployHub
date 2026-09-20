@@ -64,7 +64,7 @@ services:
       - autodeploy-network
 
   frontend:
-    image: node:22-alpine
+    image: node:24.12.0-alpine
     container_name: autodeploy-frontend
     working_dir: /app
     restart: unless-stopped
@@ -89,9 +89,8 @@ services:
     restart: unless-stopped
     environment:
       SPRING_DOCKER_COMPOSE_ENABLED: "false"
-      # 도커 postgres 대신 호스트에 로컬 설치된 PostgreSQL(5432)을 바라보도록 설정.
-      # host.docker.internal 로 컨테이너에서 호스트 루프백에 접근.
-      SPRING_DATASOURCE_URL: jdbc:postgresql://host.docker.internal:5432/${POSTGRES_DB:-autodeploy}
+      # application.properties와 동일한 DB 설정을 사용하되, 호스트는 Compose 서비스명으로 지정한다.
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-autodeploy}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-rlagustn1!}
       # 컨테이너 내부에서는 서비스명으로 접속 (autodeploy-network 안).
@@ -107,6 +106,8 @@ services:
       ENV_ENC_KEY: ${ENV_ENC_KEY:-local-dev-env-key-32byte-change!}
     # 의존 인프라가 준비되기 전에 백엔드가 떠서 접속 실패 로그를 뿜는 걸 막는다.
     depends_on:
+      postgres:
+        condition: service_healthy
       rabbitmq:
         condition: service_healthy
       redis:
